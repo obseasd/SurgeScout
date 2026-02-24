@@ -356,14 +356,24 @@
     async function viewReport() {
         const idx = document.getElementById('reportSelect').value;
         if (idx === '') return;
+        const contentEl = document.getElementById('reportContent');
+        contentEl.innerHTML = '<p style="color:var(--text2)">Loading report...</p>';
         try {
             const result = await apiCall(`/api/report/${idx}`);
-            document.getElementById('reportContent').innerHTML = marked.parse(result.report || '');
+            const reportText = result.report || 'No report content';
+            // Try marked.parse, fallback to marked(), fallback to raw text
+            try {
+                contentEl.innerHTML = (typeof marked.parse === 'function') ? marked.parse(reportText) : (typeof marked === 'function') ? marked(reportText) : reportText.replace(/\n/g, '<br>');
+            } catch (parseErr) {
+                contentEl.innerHTML = reportText.replace(/\n/g, '<br>');
+            }
             // Radar chart
             const scores = result.analysis?.scores;
             if (scores) showRadar(scores);
+            addLog('Report loaded for index ' + idx, 'success');
         } catch (e) {
-            document.getElementById('reportContent').innerHTML = `<p style="color:var(--red)">Error: ${e.message}</p>`;
+            contentEl.innerHTML = `<p style="color:var(--red)">Error loading report: ${e.message}</p>`;
+            addLog('Report load failed: ' + e.message, 'error');
         }
     }
 

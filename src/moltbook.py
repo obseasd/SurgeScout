@@ -99,6 +99,12 @@ class MoltbookClient:
 # Project extraction helpers
 # ---------------------------------------------------------------------------
 
+def _strip_html(text: str) -> str:
+    """Strip HTML tags (Moltbook returns <mark> in search results)."""
+    import re
+    return re.sub(r'<[^>]+>', '', text)
+
+
 def extract_projects_from_posts(posts: list[dict]) -> list[dict]:
     """Parse Moltbook posts to extract potential project references.
 
@@ -111,8 +117,8 @@ def extract_projects_from_posts(posts: list[dict]) -> list[dict]:
     seen = set()
 
     for post in posts:
-        body = post.get("body", "") or post.get("content", "") or ""
-        title = post.get("title", "") or ""
+        body = _strip_html(post.get("body", "") or post.get("content", "") or "")
+        title = _strip_html(post.get("title", "") or "")
         author = post.get("author", {})
         if isinstance(author, dict):
             author_name = author.get("username", author.get("name", "unknown"))
