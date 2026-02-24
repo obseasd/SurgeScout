@@ -527,9 +527,10 @@
     }
 
     // ─── Helpers ─────────────────────────────────────────────
+    function stripHtml(s) { return (s || '').replace(/<[^>]*>/g, ''); }
     function esc(s) {
         const d = document.createElement('div');
-        d.textContent = s || '';
+        d.textContent = stripHtml(s) || '';
         return d.innerHTML;
     }
 
