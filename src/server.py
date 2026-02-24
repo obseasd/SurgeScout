@@ -98,10 +98,23 @@ class MoltbookPostRequest(BaseModel):
 # Routes
 # ---------------------------------------------------------------------------
 
+_web_dir = Path(__file__).parent.parent / "web"
+app.mount("/static", StaticFiles(directory=str(_web_dir)), name="static")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Serve favicon."""
+    icon = _web_dir / "logo.png"
+    if icon.exists():
+        return FileResponse(icon, media_type="image/png")
+    return JSONResponse({}, status_code=404)
+
+
 @app.get("/")
 async def index():
     """Serve the dashboard."""
-    html_path = Path(__file__).parent.parent / "web" / "index.html"
+    html_path = _web_dir / "index.html"
     if html_path.exists():
         return FileResponse(html_path, media_type="text/html")
     return HTMLResponse("<h1>SurgeScout</h1><p>Dashboard not found. Check web/index.html</p>")
@@ -553,15 +566,47 @@ async def load_demo():
                 "analysis_verdict": "STRONG_LAUNCH",
             },
             "timestamp": "2026-02-22T12:00:00Z",
-        }
+        },
+        {
+            "project": "AgentSwap",
+            "result": {
+                "status": "prepared",
+                "launch_config": {
+                    "token": {"name": "AgentSwap", "symbol": "ASWP", "totalSupply": "5000000"},
+                    "launch": {"bondingCurve": "exponential", "initialPriceUsd": "0.01", "chain": "base"},
+                },
+                "next_step": "Deploy via OpenClaw SURGE skill or Clanker SDK",
+                "analysis_score": 76,
+                "analysis_verdict": "STRONG_LAUNCH",
+            },
+            "timestamp": "2026-02-22T12:30:00Z",
+        },
     ]
     _state["moltbook_posts"] = [
         {
+            "title": "Introducing SurgeScout — AI Deal Flow Agent for Internet Capital Markets",
+            "body": "We're building SurgeScout for the SURGE x OpenClaw hackathon on lablab.ai...",
+            "result": {"status": "posted", "post_id": "3b38d762"},
+            "timestamp": "2026-02-24T16:00:00Z",
+        },
+        {
+            "title": "SurgeScout Pipeline Demo: Scouted 85 projects, analyzed 5, found 2 launch-ready",
+            "body": "We just ran the full SurgeScout pipeline on live Moltbook data...",
+            "result": {"status": "posted", "post_id": "2fb408a0"},
+            "timestamp": "2026-02-24T16:05:00Z",
+        },
+        {
+            "title": "SurgeScout Scoring Model: 5 Dimensions for Evaluating Tokenization Potential",
+            "body": "Here's how SurgeScout evaluates projects for token launches on SURGE...",
+            "result": {"status": "posted", "post_id": "13cdbcc5"},
+            "timestamp": "2026-02-24T16:10:00Z",
+        },
+        {
             "title": "[SurgeScout] Analysis: SkillForge — STRONG_LAUNCH",
-            "body": "# [LAUNCH] SurgeScout Analysis: SkillForge\n\n**Overall Score:** 85/100...",
+            "body": "# [LAUNCH] SurgeScout Analysis: SkillForge — Overall Score: 85/100...",
             "result": {"status": "posted", "post_id": "demo-post-1"},
-            "timestamp": "2026-02-22T12:05:00Z",
-        }
+            "timestamp": "2026-02-24T16:15:00Z",
+        },
     ]
     _state["last_scout"] = "2026-02-22T09:00:00Z"
     _state["last_analysis"] = "2026-02-22T10:00:00Z"

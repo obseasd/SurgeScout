@@ -37,6 +37,7 @@
             border: 1px solid var(--border);
         }
         .glow { box-shadow: 0 0 20px rgba(108, 92, 231, 0.15); }
+        .glow-green { box-shadow: 0 0 20px rgba(0, 230, 118, 0.1); }
         .btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -47,8 +48,10 @@
             font-size: 14px;
         }
         .btn-primary { background: var(--accent); color: #fff; }
-        .btn-primary:hover { background: var(--accent2); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-green { background: var(--green); color: #0a0a0f; font-weight: 700; }
+        .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
         .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
         .badge {
@@ -59,11 +62,18 @@
         .badge-promising { background: rgba(68,138,255,0.15); color: var(--blue); }
         .badge-wait { background: rgba(255,214,0,0.15); color: var(--yellow); }
         .badge-skip { background: rgba(255,82,82,0.15); color: var(--red); }
+        .badge-signal { background: rgba(108,92,231,0.15); color: var(--accent2); font-size: 10px; }
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: rgba(108, 92, 231, 0.3); }
+        .card-highlight {
+            border-color: rgba(0, 230, 118, 0.3);
+            background: linear-gradient(135deg, var(--surface), rgba(0,230,118,0.03));
         }
         .score-bar {
             height: 6px; border-radius: 3px; background: var(--surface2);
@@ -72,6 +82,8 @@
         .score-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
         .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .fadeIn { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .markdown-body { line-height: 1.6; }
         .markdown-body h1 { font-size: 1.5em; font-weight: 700; margin: 16px 0 8px; }
         .markdown-body h2 { font-size: 1.2em; font-weight: 600; margin: 12px 0 6px; color: var(--accent2); }
@@ -84,10 +96,18 @@
         .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); transition: all 0.2s; }
         .tab.active { background: var(--accent); color: #fff; }
         .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+        .tab .tab-count { background: var(--surface2); color: var(--text2); padding: 1px 6px; border-radius: 99px; font-size: 10px; margin-left: 4px; }
+        .tab.active .tab-count { background: rgba(255,255,255,0.2); color: #fff; }
         #log { max-height: 200px; overflow-y: auto; }
         #log p { font-size: 12px; padding: 2px 0; border-bottom: 1px solid rgba(42,42,62,0.4); }
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .signal-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .signal-strong { background: var(--green); box-shadow: 0 0 6px rgba(0,230,118,0.4); }
+        .signal-medium { background: var(--blue); }
+        .signal-weak { background: var(--yellow); }
+        .progress-ring { width: 48px; height: 48px; }
+        .divider { height: 1px; background: var(--border); margin: 16px 0; }
     </style>
 </head>
 <body>
@@ -101,9 +121,12 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
+            <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="text-xs text-[var(--accent2)] hover:underline hidden md:inline">Moltbook Profile</a>
+            <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="text-xs text-[var(--text2)] hover:text-[var(--text)] hidden md:inline">GitHub</a>
+            <span class="text-[var(--border)]">|</span>
             <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
             <span id="statusText" class="text-xs mono text-[var(--text2)]">Ready</span>
-            <a href="/api/health" target="_blank" class="btn btn-outline text-xs">API</a>
+            <a href="/api/health" target="_blank" class="btn btn-outline text-xs py-1 px-3">API</a>
         </div>
     </header>
 
@@ -111,20 +134,24 @@
         <!-- Stats Row -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="card text-center">
-                <p class="text-2xl font-bold mono" id="statScouted">0</p>
-                <p class="text-xs text-[var(--text2)]">Projects Scouted</p>
+                <p class="text-3xl font-bold mono" id="statScouted">0</p>
+                <p class="text-xs text-[var(--text2)] mt-1">Projects Scouted</p>
+                <p class="text-[10px] text-[var(--text2)] mt-0.5">from 5 submolts</p>
             </div>
             <div class="card text-center">
-                <p class="text-2xl font-bold mono" id="statAnalyzed">0</p>
-                <p class="text-xs text-[var(--text2)]">Analyzed</p>
+                <p class="text-3xl font-bold mono" id="statAnalyzed">0</p>
+                <p class="text-xs text-[var(--text2)] mt-1">Analyzed by AI</p>
+                <p class="text-[10px] text-[var(--text2)] mt-0.5">5D scoring model</p>
+            </div>
+            <div class="card text-center" id="cardLaunchReady">
+                <p class="text-3xl font-bold mono text-[var(--green)]" id="statLaunchReady">0</p>
+                <p class="text-xs text-[var(--text2)] mt-1">Launch Ready</p>
+                <p class="text-[10px] text-[var(--text2)] mt-0.5">score 75+</p>
             </div>
             <div class="card text-center">
-                <p class="text-2xl font-bold mono text-[var(--green)]" id="statLaunchReady">0</p>
-                <p class="text-xs text-[var(--text2)]">Launch Ready</p>
-            </div>
-            <div class="card text-center">
-                <p class="text-2xl font-bold mono text-[var(--accent2)]" id="statPosts">0</p>
-                <p class="text-xs text-[var(--text2)]">Moltbook Posts</p>
+                <p class="text-3xl font-bold mono text-[var(--accent2)]" id="statPosts">4</p>
+                <p class="text-xs text-[var(--text2)] mt-1">Moltbook Posts</p>
+                <p class="text-[10px] text-[var(--text2)] mt-0.5"><a href="https://www.moltbook.com/u/surgescout" target="_blank" class="text-[var(--accent2)] hover:underline">@surgescout</a></p>
             </div>
         </div>
 
@@ -134,20 +161,32 @@
                 Run Full Pipeline
             </button>
             <button onclick="runScout()" class="btn btn-outline">Scout</button>
-            <button onclick="runAnalyze()" class="btn btn-outline">Analyze All</button>
+            <button onclick="runAnalyze()" class="btn btn-outline">Analyze Top 8</button>
             <button onclick="postReport()" class="btn btn-outline">Post to Moltbook</button>
             <div class="flex-1"></div>
-            <button onclick="loadDemo()" class="btn btn-outline text-xs" style="border-color:var(--accent);color:var(--accent2)">Load Demo Data</button>
+            <button onclick="loadDemo()" class="btn btn-green text-xs">Load Demo Data</button>
             <span class="text-xs text-[var(--text2)] mono" id="lastRun">Never run</span>
         </div>
 
+        <!-- Pipeline Results Summary (hidden by default) -->
+        <div id="pipelineSummary" class="card glow fadeIn" style="display:none">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-green-500 flex items-center justify-center text-sm font-bold">P</div>
+                <div>
+                    <h3 class="text-sm font-bold">Pipeline Results</h3>
+                    <p class="text-xs text-[var(--text2)]" id="summaryTimestamp"></p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center" id="summaryGrid"></div>
+        </div>
+
         <!-- Tabs -->
-        <div class="flex gap-2 overflow-x-auto pb-2">
-            <div class="tab active" onclick="switchTab('projects')">Scouted Projects</div>
-            <div class="tab" onclick="switchTab('analyses')">Analyses</div>
-            <div class="tab" onclick="switchTab('launches')">Launches</div>
-            <div class="tab" onclick="switchTab('report')">Report Viewer</div>
-            <div class="tab" onclick="switchTab('log')">Agent Log</div>
+        <div class="flex gap-2 overflow-x-auto pb-2" id="tabBar">
+            <div class="tab active" onclick="switchTab('projects', this)">Scouted <span class="tab-count" id="tabCountProjects">0</span></div>
+            <div class="tab" onclick="switchTab('analyses', this)">Analyses <span class="tab-count" id="tabCountAnalyses">0</span></div>
+            <div class="tab" onclick="switchTab('launches', this)">Launches <span class="tab-count" id="tabCountLaunches">0</span></div>
+            <div class="tab" onclick="switchTab('report', this)">Report Viewer</div>
+            <div class="tab" onclick="switchTab('log', this)">Agent Log</div>
         </div>
 
         <!-- Tab: Scouted Projects -->
@@ -155,13 +194,23 @@
             <div id="projectsList" class="space-y-3">
                 <div class="card text-center text-[var(--text2)] py-12">
                     <p class="text-lg mb-2">No projects scouted yet</p>
-                    <p class="text-sm">Click <strong>Scout</strong> or <strong>Run Full Pipeline</strong> to discover projects on Moltbook</p>
+                    <p class="text-sm">Click <strong>Run Full Pipeline</strong> to scout Moltbook, analyze projects, and generate reports</p>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Analyses -->
         <div id="tab-analyses" class="space-y-3 hidden">
+            <!-- Verdict summary bar -->
+            <div id="verdictSummary" class="card" style="display:none">
+                <div class="flex items-center gap-4 flex-wrap text-xs">
+                    <span class="font-semibold text-[var(--text2)]">Verdicts:</span>
+                    <span id="verdictLaunch" class="flex items-center gap-1"><span class="signal-dot signal-strong"></span> <span>0</span> STRONG_LAUNCH</span>
+                    <span id="verdictPromising" class="flex items-center gap-1"><span class="signal-dot signal-medium"></span> <span>0</span> PROMISING</span>
+                    <span id="verdictWait" class="flex items-center gap-1"><span class="signal-dot signal-weak"></span> <span>0</span> NEEDS_WORK</span>
+                    <span id="verdictSkip" class="flex items-center gap-1 text-[var(--text2)]"><span class="signal-dot" style="background:var(--red)"></span> <span>0</span> SKIP</span>
+                </div>
+            </div>
             <div id="analysesList" class="space-y-3">
                 <div class="card text-center text-[var(--text2)] py-12">
                     <p>No analyses yet. Scout projects first, then analyze them.</p>
@@ -173,7 +222,7 @@
         <div id="tab-launches" class="space-y-3 hidden">
             <div id="launchesList" class="space-y-3">
                 <div class="card text-center text-[var(--text2)] py-12">
-                    <p>No launches yet.</p>
+                    <p>No launches yet. Analyze projects to find launch candidates.</p>
                 </div>
             </div>
         </div>
@@ -185,10 +234,10 @@
                     <select id="reportSelect" class="bg-[var(--surface2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm flex-1">
                         <option value="">Select an analysis to view report...</option>
                     </select>
-                    <button onclick="viewReport()" class="btn btn-outline text-sm">View Report</button>
+                    <button onclick="viewReport()" class="btn btn-primary text-sm">View Report</button>
                 </div>
                 <div id="reportContent" class="markdown-body text-sm">
-                    <p class="text-[var(--text2)]">Select an analysis above to generate and view the full report.</p>
+                    <p class="text-[var(--text2)]">Select an analysis above to generate and view the full report with radar chart.</p>
                 </div>
             </div>
             <!-- Radar Chart -->
@@ -215,21 +264,29 @@
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs text-[var(--text2)]">
-        SurgeScout v1.0 — Built for SURGE x OpenClaw Hackathon on lablab.ai
+    <footer class="text-center py-8 text-xs text-[var(--text2)] space-y-1">
+        <p>SurgeScout v1.0 — Built for SURGE x OpenClaw Hackathon on lablab.ai</p>
+        <p>
+            <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="hover:text-[var(--accent2)]">GitHub</a>
+            <span class="mx-2">|</span>
+            <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="hover:text-[var(--accent2)]">Moltbook</a>
+            <span class="mx-2">|</span>
+            <a href="/api/health" target="_blank" class="hover:text-[var(--accent2)]">API Health</a>
+        </p>
     </footer>
 
     <script>
     const API = '';
+    const OPENCLAW_POSTS = 4; // Posts made via OpenClaw agent on m/lablab
     let state = { scouted_projects: [], analyses: [], launches: [], moltbook_posts: [] };
     let radarChartInstance = null;
 
     // ─── Tab switching ──────────────────────────────────────
-    function switchTab(name) {
-        document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+    function switchTab(name, el) {
+        document.querySelectorAll('[id^="tab-"]').forEach(e => e.classList.add('hidden'));
         document.getElementById('tab-' + name).classList.remove('hidden');
-        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+        if (el) el.classList.add('active');
     }
 
     // ─── Logging ────────────────────────────────────────────
@@ -279,7 +336,7 @@
     async function runPipeline() {
         setStatus('Running pipeline...', true);
         setButtonLoading('btnPipeline', true);
-        addLog('Starting full pipeline: Scout → Analyze → Report', 'info');
+        addLog('Starting full pipeline: Scout -> Analyze -> Report', 'info');
         try {
             const result = await apiCall('/api/pipeline', 'POST', {
                 submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
@@ -288,7 +345,10 @@
             if (result.best_project) {
                 addLog(`Best project: ${result.best_project} (score: ${result.best_score})`, 'success');
             }
+            showPipelineSummary(result);
             await loadState();
+            // Auto-switch to analyses tab
+            switchTab('analyses', document.querySelectorAll('.tab')[1]);
         } catch (e) {
             addLog('Pipeline failed: ' + e.message, 'error');
         }
@@ -298,31 +358,32 @@
 
     async function runScout() {
         setStatus('Scouting Moltbook...', true);
-        addLog('Scouting Moltbook for projects...', 'info');
+        addLog('Scouting 5 submolts + trending + keyword search...', 'info');
         try {
             const result = await apiCall('/api/scout', 'POST', {
                 submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
             });
-            addLog(`Found ${result.count} projects`, 'success');
+            addLog(`Found ${result.count} project candidates`, 'success');
             await loadState();
         } catch (e) { addLog('Scout failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
     async function runAnalyze() {
-        setStatus('Analyzing projects...', true);
-        addLog('Analyzing all scouted projects...', 'info');
+        setStatus('Analyzing top projects with Claude...', true);
+        addLog('Analyzing top 8 projects (5D scoring)...', 'info');
         try {
             const result = await apiCall('/api/analyze', 'POST', { min_score: 0 });
             addLog(`Analyzed ${result.count} projects`, 'success');
             await loadState();
+            switchTab('analyses', document.querySelectorAll('.tab')[1]);
         } catch (e) { addLog('Analyze failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
     async function postReport() {
         setStatus('Posting to Moltbook...', true);
-        addLog('Posting report to Moltbook...', 'info');
+        addLog('Posting analysis report to Moltbook...', 'info');
         try {
             const result = await apiCall('/api/moltbook/report', 'POST', {});
             addLog('Report posted to Moltbook', 'success');
@@ -333,22 +394,24 @@
 
     async function loadDemo() {
         setStatus('Loading demo data...', true);
-        addLog('Loading demo data for presentation...', 'info');
+        addLog('Loading curated demo data for presentation...', 'info');
         try {
             const result = await apiCall('/api/demo', 'POST', {});
             addLog(`Demo loaded: ${result.projects} projects, ${result.analyses} analyses, ${result.launches} launches`, 'success');
             await loadState();
+            switchTab('analyses', document.querySelectorAll('.tab')[1]);
         } catch (e) { addLog('Demo load failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
     async function launchToken(index) {
-        setStatus('Launching token...', true);
+        setStatus('Preparing token launch on SURGE...', true);
         addLog(`Launching token for analysis #${index}...`, 'info');
         try {
             const result = await apiCall('/api/launch', 'POST', { analysis_index: index, chain: 'base' });
-            addLog(`Launch result: ${result.status || 'done'}`, result.error ? 'error' : 'success');
+            addLog(`Launch result: ${result.status || 'prepared'}`, result.error ? 'error' : 'success');
             await loadState();
+            switchTab('launches', document.querySelectorAll('.tab')[2]);
         } catch (e) { addLog('Launch failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
@@ -361,13 +424,11 @@
         try {
             const result = await apiCall(`/api/report/${idx}`);
             const reportText = result.report || 'No report content';
-            // Try marked.parse, fallback to marked(), fallback to raw text
             try {
                 contentEl.innerHTML = (typeof marked.parse === 'function') ? marked.parse(reportText) : (typeof marked === 'function') ? marked(reportText) : reportText.replace(/\n/g, '<br>');
             } catch (parseErr) {
                 contentEl.innerHTML = reportText.replace(/\n/g, '<br>');
             }
-            // Radar chart
             const scores = result.analysis?.scores;
             if (scores) showRadar(scores);
             addLog('Report loaded for index ' + idx, 'success');
@@ -377,75 +438,123 @@
         }
     }
 
+    // ─── Pipeline Summary ───────────────────────────────────
+    function showPipelineSummary(result) {
+        const el = document.getElementById('pipelineSummary');
+        el.style.display = 'block';
+        document.getElementById('summaryTimestamp').textContent = new Date().toLocaleString();
+        const launchCount = (result.reports || []).filter(r => r.verdict === 'STRONG_LAUNCH').length;
+        const promisingCount = (result.reports || []).filter(r => r.verdict === 'PROMISING').length;
+        document.getElementById('summaryGrid').innerHTML = `
+            <div><p class="text-lg font-bold mono">${result.scouted || 0}</p><p class="text-[10px] text-[var(--text2)]">Scouted</p></div>
+            <div><p class="text-lg font-bold mono">${result.analyzed || 0}</p><p class="text-[10px] text-[var(--text2)]">Analyzed</p></div>
+            <div><p class="text-lg font-bold mono text-[var(--green)]">${launchCount}</p><p class="text-[10px] text-[var(--text2)]">Launch Ready</p></div>
+            <div><p class="text-lg font-bold mono text-[var(--blue)]">${promisingCount}</p><p class="text-[10px] text-[var(--text2)]">Promising</p></div>
+            ${result.best_project ? `<div class="col-span-2 md:col-span-4 text-left mt-2 pt-2 border-t border-[var(--border)]"><span class="text-xs text-[var(--text2)]">Best candidate:</span> <span class="text-sm font-semibold">${esc(result.best_project)}</span> <span class="mono text-sm text-[var(--green)]">${result.best_score}/100</span></div>` : ''}
+        `;
+    }
+
     // ─── Render UI ──────────────────────────────────────────
     function updateUI() {
+        const projects = state.scouted_projects || [];
+        const analyses = state.analyses || [];
+        const launches = state.launches || [];
+        const posts = state.moltbook_posts || [];
+
         // Stats
-        document.getElementById('statScouted').textContent = state.scouted_projects?.length || 0;
-        document.getElementById('statAnalyzed').textContent = state.analyses?.length || 0;
-        document.getElementById('statLaunchReady').textContent =
-            state.launch_ready_count || (state.analyses || []).filter(a => a.verdict === 'STRONG_LAUNCH').length;
-        document.getElementById('statPosts').textContent = state.moltbook_posts?.length || 0;
+        document.getElementById('statScouted').textContent = projects.length;
+        document.getElementById('statAnalyzed').textContent = analyses.length;
+        const launchReady = state.launch_ready_count || analyses.filter(a => a.verdict === 'STRONG_LAUNCH').length;
+        document.getElementById('statLaunchReady').textContent = launchReady;
+        document.getElementById('statPosts').textContent = Math.max(OPENCLAW_POSTS, posts.length + OPENCLAW_POSTS);
+
+        // Highlight launch ready card
+        const lrCard = document.getElementById('cardLaunchReady');
+        if (launchReady > 0) lrCard.classList.add('card-highlight', 'glow-green');
+        else lrCard.classList.remove('card-highlight', 'glow-green');
+
+        // Tab counts
+        document.getElementById('tabCountProjects').textContent = projects.length;
+        document.getElementById('tabCountAnalyses').textContent = analyses.length;
+        document.getElementById('tabCountLaunches').textContent = launches.length;
 
         if (state.last_scout) {
             document.getElementById('lastRun').textContent = 'Last scout: ' + new Date(state.last_scout).toLocaleString();
         }
 
-        // Projects list
         renderProjects();
         renderAnalyses();
         renderLaunches();
         updateReportSelect();
+        updateVerdictSummary();
     }
 
     function renderProjects() {
         const el = document.getElementById('projectsList');
         const projects = state.scouted_projects || [];
         if (!projects.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No projects scouted yet. Click Scout to start.</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p class="text-lg mb-2">No projects scouted yet</p><p class="text-sm">Click <strong>Run Full Pipeline</strong> to scout Moltbook for tokenization candidates</p></div>';
             return;
         }
-        el.innerHTML = projects.map((p, i) => `
-            <div class="card">
+        el.innerHTML = projects.slice(0, 50).map((p, i) => {
+            const signals = [];
+            if ((p.github_urls || []).length) signals.push('GitHub');
+            if ((p.token_mentions || []).length) signals.push('Token');
+            if ((p.votes || 0) >= 20) signals.push('Traction');
+            const signalStrength = signals.length >= 3 ? 'strong' : signals.length >= 2 ? 'medium' : 'weak';
+            return `
+            <div class="card fadeIn" style="animation-delay:${Math.min(i*30, 300)}ms">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-sm truncate">${esc(p.title || 'Untitled')}</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="signal-dot signal-${signalStrength}" title="${signals.join(', ') || 'Weak signal'}"></span>
+                            <h3 class="font-semibold text-sm truncate">${esc(p.title || 'Untitled')}</h3>
+                        </div>
                         <p class="text-xs text-[var(--text2)] mt-1">by ${esc(p.author || '?')} ${p.submolt ? '· m/' + esc(p.submolt) : ''}</p>
-                        <p class="text-xs text-[var(--text2)] mt-2 line-clamp-2">${esc((p.body || '').substring(0, 200))}</p>
+                        <p class="text-xs text-[var(--text2)] mt-2 line-clamp-2">${esc(stripMd((p.body || '').substring(0, 200)))}</p>
                         <div class="flex gap-2 mt-2 flex-wrap">
-                            ${(p.github_urls || []).map(u => `<a href="${esc(u)}" target="_blank" class="text-xs text-[var(--accent2)] hover:underline">${esc(u.split('/').slice(-2).join('/'))}</a>`).join('')}
+                            ${(p.github_urls || []).map(u => `<a href="${esc(u)}" target="_blank" class="badge badge-signal hover:underline">${esc(u.split('/').slice(-2).join('/'))}</a>`).join('')}
                             ${(p.token_mentions || []).map(t => `<span class="badge badge-promising">$${esc(t)}</span>`).join('')}
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-xs text-[var(--text2)]">${p.votes || 0} votes</p>
-                        <p class="text-xs text-[var(--text2)]">${p.comments || 0} comments</p>
+                        <p class="text-sm font-bold mono">${p.votes || 0}</p>
+                        <p class="text-[10px] text-[var(--text2)]">votes</p>
+                        <p class="text-xs text-[var(--text2)] mt-1">${p.comments || 0} comments</p>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
+        if (projects.length > 50) {
+            el.innerHTML += `<p class="text-center text-xs text-[var(--text2)] py-2">+ ${projects.length - 50} more projects</p>`;
+        }
     }
 
     function renderAnalyses() {
         const el = document.getElementById('analysesList');
         const analyses = state.analyses || [];
         if (!analyses.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No analyses yet.</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No analyses yet. Run the pipeline or click Analyze.</p></div>';
             return;
         }
         el.innerHTML = analyses.map((a, i) => {
             const verdict = a.verdict || 'UNKNOWN';
-            const badgeClass = { STRONG_LAUNCH: 'badge-launch', PROMISING: 'badge-promising', NEEDS_WORK: 'badge-wait', SKIP: 'badge-skip' }[verdict] || 'badge-skip';
+            const badgeClass = { STRONG_LAUNCH: 'badge-launch', PROMISING: 'badge-promising', NEEDS_WORK: 'badge-wait', SKIP: 'badge-skip', ERROR: 'badge-skip' }[verdict] || 'badge-skip';
             const scores = a.scores || {};
+            const isLaunchable = verdict === 'STRONG_LAUNCH';
             return `
-            <div class="card">
+            <div class="card fadeIn ${isLaunchable ? 'card-highlight' : ''}" style="animation-delay:${i*50}ms">
                 <div class="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                        <h3 class="font-semibold text-sm">${esc(a.project_name || '?')}</h3>
-                        <p class="text-xs text-[var(--text2)] mt-1">${esc(a.summary || '')}</p>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-semibold">${esc(a.project_name || '?')}</h3>
+                            <span class="badge ${badgeClass}">${verdict}</span>
+                        </div>
+                        <p class="text-xs text-[var(--text2)] mt-1 line-clamp-2">${esc(a.summary || '')}</p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <span class="badge ${badgeClass}">${verdict}</span>
-                        <p class="text-xl font-bold mono mt-1">${a.overall_score || 0}</p>
+                        <p class="text-2xl font-bold mono ${isLaunchable ? 'text-[var(--green)]' : ''}">${a.overall_score || 0}</p>
+                        <p class="text-[10px] text-[var(--text2)]">/ 100</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-5 gap-2 text-xs">
@@ -455,13 +564,30 @@
                     ${scoreBar('Token', scores.tokenomics_feasibility)}
                     ${scoreBar('Traction', scores.traction)}
                 </div>
-                ${verdict === 'STRONG_LAUNCH' || verdict === 'PROMISING' ? `
-                <div class="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
-                    <button onclick="launchToken(${i})" class="btn btn-primary text-xs py-1 px-3">Launch Token</button>
-                    <span class="text-xs text-[var(--text2)]">${a.tokenomics_advice?.suggested_name || ''} · ${a.tokenomics_advice?.bonding_curve || ''} curve</span>
+                ${a.tokenomics_advice ? `
+                <div class="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-3 text-xs text-[var(--text2)]">
+                        <span class="mono font-bold text-[var(--accent2)]">${a.tokenomics_advice.suggested_name || ''}</span>
+                        <span>${a.tokenomics_advice.bonding_curve || ''} curve</span>
+                        <span>Supply: ${Number(a.tokenomics_advice.suggested_supply || 0).toLocaleString()}</span>
+                    </div>
+                    ${isLaunchable || verdict === 'PROMISING' ? `<button onclick="launchToken(${i})" class="btn ${isLaunchable ? 'btn-green' : 'btn-outline'} text-xs py-1 px-3">Launch on SURGE</button>` : ''}
                 </div>` : ''}
             </div>`;
         }).join('');
+    }
+
+    function updateVerdictSummary() {
+        const analyses = state.analyses || [];
+        const el = document.getElementById('verdictSummary');
+        if (!analyses.length) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        const counts = { STRONG_LAUNCH: 0, PROMISING: 0, NEEDS_WORK: 0, SKIP: 0 };
+        analyses.forEach(a => { if (counts.hasOwnProperty(a.verdict)) counts[a.verdict]++; });
+        document.querySelector('#verdictLaunch span:nth-child(2)').textContent = counts.STRONG_LAUNCH;
+        document.querySelector('#verdictPromising span:nth-child(2)').textContent = counts.PROMISING;
+        document.querySelector('#verdictWait span:nth-child(2)').textContent = counts.NEEDS_WORK;
+        document.querySelector('#verdictSkip span:nth-child(2)').textContent = counts.SKIP;
     }
 
     function scoreBar(label, value) {
@@ -477,17 +603,25 @@
         const el = document.getElementById('launchesList');
         const launches = state.launches || [];
         if (!launches.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No launches yet.</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No launches yet. Analyze projects to find STRONG_LAUNCH candidates, then click "Launch on SURGE".</p></div>';
             return;
         }
-        el.innerHTML = launches.map(l => `
-            <div class="card">
+        el.innerHTML = launches.map((l, i) => `
+            <div class="card card-highlight fadeIn" style="animation-delay:${i*50}ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold text-sm">${esc(l.project || '?')}</h3>
-                        <p class="text-xs text-[var(--text2)]">${esc(l.result?.status || 'unknown')} · ${new Date(l.timestamp).toLocaleString()}</p>
+                        <h3 class="font-semibold">${esc(l.project || '?')}</h3>
+                        <p class="text-xs text-[var(--text2)] mt-1">${esc(l.result?.status || 'prepared')} · ${l.result?.launch_config?.launch?.chain || 'base'} · ${new Date(l.timestamp).toLocaleString()}</p>
+                        ${l.result?.launch_config?.token ? `<div class="flex gap-3 mt-2 text-xs text-[var(--text2)]">
+                            <span class="mono font-bold text-[var(--green)]">$${l.result.launch_config.token.symbol}</span>
+                            <span>Supply: ${Number(l.result.launch_config.token.totalSupply).toLocaleString()}</span>
+                            <span>${l.result.launch_config.launch?.bondingCurve || ''} curve</span>
+                        </div>` : ''}
                     </div>
-                    <span class="badge badge-launch">${l.result?.analysis_verdict || '?'}</span>
+                    <div class="text-right">
+                        <span class="badge badge-launch">${l.result?.analysis_verdict || 'LAUNCH'}</span>
+                        <p class="text-lg font-bold mono mt-1">${l.result?.analysis_score || '?'}</p>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -496,9 +630,10 @@
     function updateReportSelect() {
         const sel = document.getElementById('reportSelect');
         const current = sel.value;
-        sel.innerHTML = '<option value="">Select an analysis...</option>';
+        sel.innerHTML = '<option value="">Select an analysis to view report...</option>';
         (state.analyses || []).forEach((a, i) => {
-            sel.innerHTML += `<option value="${i}">${a.project_name || '?'} (${a.overall_score || 0}/100)</option>`;
+            const v = a.verdict === 'STRONG_LAUNCH' ? ' [LAUNCH]' : a.verdict === 'PROMISING' ? ' [WATCH]' : '';
+            sel.innerHTML += `<option value="${i}">${a.project_name || '?'} (${a.overall_score || 0}/100)${v}</option>`;
         });
         sel.value = current;
     }
@@ -519,6 +654,7 @@
                     backgroundColor: 'rgba(108,92,231,0.15)',
                     borderWidth: 2,
                     pointBackgroundColor: '#a29bfe',
+                    pointRadius: 4,
                 }]
             },
             options: {
@@ -538,6 +674,19 @@
 
     // ─── Helpers ─────────────────────────────────────────────
     function stripHtml(s) { return (s || '').replace(/<[^>]*>/g, ''); }
+    function stripMd(s) {
+        return (s || '')
+            .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold**
+            .replace(/\*([^*]+)\*/g, '$1')        // *italic*
+            .replace(/#{1,6}\s*/g, '')             // ## headings
+            .replace(/`([^`]+)`/g, '$1')           // `code`
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [links](url)
+            .replace(/^\s*[-*]\s+/gm, '')          // - list items
+            .replace(/^\s*\d+\.\s+/gm, '')         // 1. ordered lists
+            .replace(/\n{2,}/g, ' ')               // multiple newlines
+            .replace(/\n/g, ' ')                   // single newlines
+            .trim();
+    }
     function esc(s) {
         const d = document.createElement('div');
         d.textContent = stripHtml(s) || '';
