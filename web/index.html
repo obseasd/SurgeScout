@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SurgeScout — AI Deal Flow Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface2: #1a1a2e;
+            --border: #2a2a3e;
+            --text: #e4e4ef;
+            --text2: #8888a4;
+            --accent: #6c5ce7;
+            --accent2: #a29bfe;
+            --green: #00e676;
+            --yellow: #ffd600;
+            --red: #ff5252;
+            --blue: #448aff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+        }
+        .glow { box-shadow: 0 0 20px rgba(108, 92, 231, 0.15); }
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 99px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .badge-launch { background: rgba(0,230,118,0.15); color: var(--green); }
+        .badge-promising { background: rgba(68,138,255,0.15); color: var(--blue); }
+        .badge-wait { background: rgba(255,214,0,0.15); color: var(--yellow); }
+        .badge-skip { background: rgba(255,82,82,0.15); color: var(--red); }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .score-bar {
+            height: 6px; border-radius: 3px; background: var(--surface2);
+            overflow: hidden;
+        }
+        .score-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .markdown-body { line-height: 1.6; }
+        .markdown-body h1 { font-size: 1.5em; font-weight: 700; margin: 16px 0 8px; }
+        .markdown-body h2 { font-size: 1.2em; font-weight: 600; margin: 12px 0 6px; color: var(--accent2); }
+        .markdown-body p { margin: 6px 0; }
+        .markdown-body ul { padding-left: 20px; margin: 6px 0; }
+        .markdown-body li { margin: 3px 0; }
+        .markdown-body code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+        .markdown-body blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text2); margin: 8px 0; }
+        .markdown-body hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+        .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); transition: all 0.2s; }
+        .tab.active { background: var(--accent); color: #fff; }
+        .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+        #log { max-height: 200px; overflow-y: auto; }
+        #log p { font-size: 12px; padding: 2px 0; border-bottom: 1px solid rgba(42,42,62,0.4); }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-500 flex items-center justify-center text-lg font-bold">S</div>
+            <div>
+                <h1 class="text-lg font-bold">SurgeScout</h1>
+                <p class="text-xs text-[var(--text2)]">AI Deal Flow for Internet Capital Markets</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+            <span id="statusText" class="text-xs mono text-[var(--text2)]">Ready</span>
+            <a href="/api/health" target="_blank" class="btn btn-outline text-xs">API</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="card text-center">
+                <p class="text-2xl font-bold mono" id="statScouted">0</p>
+                <p class="text-xs text-[var(--text2)]">Projects Scouted</p>
+            </div>
+            <div class="card text-center">
+                <p class="text-2xl font-bold mono" id="statAnalyzed">0</p>
+                <p class="text-xs text-[var(--text2)]">Analyzed</p>
+            </div>
+            <div class="card text-center">
+                <p class="text-2xl font-bold mono text-[var(--green)]" id="statLaunchReady">0</p>
+                <p class="text-xs text-[var(--text2)]">Launch Ready</p>
+            </div>
+            <div class="card text-center">
+                <p class="text-2xl font-bold mono text-[var(--accent2)]" id="statPosts">0</p>
+                <p class="text-xs text-[var(--text2)]">Moltbook Posts</p>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="card flex flex-wrap items-center gap-3">
+            <button onclick="runPipeline()" class="btn btn-primary" id="btnPipeline">
+                Run Full Pipeline
+            </button>
+            <button onclick="runScout()" class="btn btn-outline">Scout</button>
+            <button onclick="runAnalyze()" class="btn btn-outline">Analyze All</button>
+            <button onclick="postReport()" class="btn btn-outline">Post to Moltbook</button>
+            <div class="flex-1"></div>
+            <span class="text-xs text-[var(--text2)] mono" id="lastRun">Never run</span>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 overflow-x-auto pb-2">
+            <div class="tab active" onclick="switchTab('projects')">Scouted Projects</div>
+            <div class="tab" onclick="switchTab('analyses')">Analyses</div>
+            <div class="tab" onclick="switchTab('launches')">Launches</div>
+            <div class="tab" onclick="switchTab('report')">Report Viewer</div>
+            <div class="tab" onclick="switchTab('log')">Agent Log</div>
+        </div>
+
+        <!-- Tab: Scouted Projects -->
+        <div id="tab-projects" class="space-y-3">
+            <div id="projectsList" class="space-y-3">
+                <div class="card text-center text-[var(--text2)] py-12">
+                    <p class="text-lg mb-2">No projects scouted yet</p>
+                    <p class="text-sm">Click <strong>Scout</strong> or <strong>Run Full Pipeline</strong> to discover projects on Moltbook</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Analyses -->
+        <div id="tab-analyses" class="space-y-3 hidden">
+            <div id="analysesList" class="space-y-3">
+                <div class="card text-center text-[var(--text2)] py-12">
+                    <p>No analyses yet. Scout projects first, then analyze them.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Launches -->
+        <div id="tab-launches" class="space-y-3 hidden">
+            <div id="launchesList" class="space-y-3">
+                <div class="card text-center text-[var(--text2)] py-12">
+                    <p>No launches yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Report Viewer -->
+        <div id="tab-report" class="hidden">
+            <div class="card">
+                <div class="flex items-center gap-3 mb-4">
+                    <select id="reportSelect" class="bg-[var(--surface2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm flex-1">
+                        <option value="">Select an analysis to view report...</option>
+                    </select>
+                    <button onclick="viewReport()" class="btn btn-outline text-sm">View Report</button>
+                </div>
+                <div id="reportContent" class="markdown-body text-sm">
+                    <p class="text-[var(--text2)]">Select an analysis above to generate and view the full report.</p>
+                </div>
+            </div>
+            <!-- Radar Chart -->
+            <div class="card mt-4" id="radarCard" style="display:none">
+                <h3 class="text-sm font-semibold mb-3">Score Breakdown</h3>
+                <div style="max-width:400px;margin:auto">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Agent Log -->
+        <div id="tab-log" class="hidden">
+            <div class="card">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold">Agent Activity Log</h3>
+                    <button onclick="clearLog()" class="text-xs text-[var(--text2)] hover:text-[var(--red)]">Clear</button>
+                </div>
+                <div id="log" class="mono text-xs space-y-0">
+                    <p class="text-[var(--text2)]">[init] SurgeScout dashboard loaded</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-8 text-xs text-[var(--text2)]">
+        SurgeScout v1.0 — Built for SURGE x OpenClaw Hackathon on lablab.ai
+    </footer>
+
+    <script>
+    const API = '';
+    let state = { scouted_projects: [], analyses: [], launches: [], moltbook_posts: [] };
+    let radarChartInstance = null;
+
+    // ─── Tab switching ──────────────────────────────────────
+    function switchTab(name) {
+        document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + name).classList.remove('hidden');
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // ─── Logging ────────────────────────────────────────────
+    function addLog(msg, level = 'info') {
+        const colors = { info: 'var(--text2)', success: 'var(--green)', error: 'var(--red)', warn: 'var(--yellow)' };
+        const el = document.getElementById('log');
+        const time = new Date().toLocaleTimeString();
+        el.innerHTML += `<p style="color:${colors[level] || colors.info}">[${time}] ${msg}</p>`;
+        el.scrollTop = el.scrollHeight;
+    }
+    function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+    // ─── Status ─────────────────────────────────────────────
+    function setStatus(text, busy = false) {
+        document.getElementById('statusText').textContent = text;
+        const dot = document.getElementById('statusDot');
+        dot.className = 'w-2.5 h-2.5 rounded-full ' + (busy ? 'bg-yellow-400 pulse' : 'bg-green-500');
+    }
+
+    function setButtonLoading(id, loading) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = loading;
+        if (loading) btn.dataset.orig = btn.textContent;
+        btn.textContent = loading ? 'Running...' : (btn.dataset.orig || btn.textContent);
+    }
+
+    // ─── API calls ──────────────────────────────────────────
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const r = await fetch(API + endpoint, opts);
+        if (!r.ok) throw new Error(`API ${r.status}: ${await r.text()}`);
+        return r.json();
+    }
+
+    async function loadState() {
+        try {
+            state = await apiCall('/api/state');
+            updateUI();
+        } catch (e) {
+            addLog('Failed to load state: ' + e.message, 'error');
+        }
+    }
+
+    // ─── Actions ────────────────────────────────────────────
+    async function runPipeline() {
+        setStatus('Running pipeline...', true);
+        setButtonLoading('btnPipeline', true);
+        addLog('Starting full pipeline: Scout → Analyze → Report', 'info');
+        try {
+            const result = await apiCall('/api/pipeline', 'POST', {
+                submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
+            });
+            addLog(`Pipeline complete: ${result.scouted} scouted, ${result.analyzed} analyzed`, 'success');
+            if (result.best_project) {
+                addLog(`Best project: ${result.best_project} (score: ${result.best_score})`, 'success');
+            }
+            await loadState();
+        } catch (e) {
+            addLog('Pipeline failed: ' + e.message, 'error');
+        }
+        setStatus('Ready');
+        setButtonLoading('btnPipeline', false);
+    }
+
+    async function runScout() {
+        setStatus('Scouting Moltbook...', true);
+        addLog('Scouting Moltbook for projects...', 'info');
+        try {
+            const result = await apiCall('/api/scout', 'POST', {
+                submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
+            });
+            addLog(`Found ${result.count} projects`, 'success');
+            await loadState();
+        } catch (e) { addLog('Scout failed: ' + e.message, 'error'); }
+        setStatus('Ready');
+    }
+
+    async function runAnalyze() {
+        setStatus('Analyzing projects...', true);
+        addLog('Analyzing all scouted projects...', 'info');
+        try {
+            const result = await apiCall('/api/analyze', 'POST', { min_score: 0 });
+            addLog(`Analyzed ${result.count} projects`, 'success');
+            await loadState();
+        } catch (e) { addLog('Analyze failed: ' + e.message, 'error'); }
+        setStatus('Ready');
+    }
+
+    async function postReport() {
+        setStatus('Posting to Moltbook...', true);
+        addLog('Posting report to Moltbook...', 'info');
+        try {
+            const result = await apiCall('/api/moltbook/report', 'POST', {});
+            addLog('Report posted to Moltbook', 'success');
+            await loadState();
+        } catch (e) { addLog('Post failed: ' + e.message, 'error'); }
+        setStatus('Ready');
+    }
+
+    async function launchToken(index) {
+        setStatus('Launching token...', true);
+        addLog(`Launching token for analysis #${index}...`, 'info');
+        try {
+            const result = await apiCall('/api/launch', 'POST', { analysis_index: index, chain: 'base' });
+            addLog(`Launch result: ${result.status || 'done'}`, result.error ? 'error' : 'success');
+            await loadState();
+        } catch (e) { addLog('Launch failed: ' + e.message, 'error'); }
+        setStatus('Ready');
+    }
+
+    async function viewReport() {
+        const idx = document.getElementById('reportSelect').value;
+        if (idx === '') return;
+        try {
+            const result = await apiCall(`/api/report/${idx}`);
+            document.getElementById('reportContent').innerHTML = marked.parse(result.report || '');
+            // Radar chart
+            const scores = result.analysis?.scores;
+            if (scores) showRadar(scores);
+        } catch (e) {
+            document.getElementById('reportContent').innerHTML = `<p style="color:var(--red)">Error: ${e.message}</p>`;
+        }
+    }
+
+    // ─── Render UI ──────────────────────────────────────────
+    function updateUI() {
+        // Stats
+        document.getElementById('statScouted').textContent = state.scouted_projects?.length || 0;
+        document.getElementById('statAnalyzed').textContent = state.analyses?.length || 0;
+        document.getElementById('statLaunchReady').textContent =
+            (state.analyses || []).filter(a => a.verdict === 'STRONG_LAUNCH' || a.verdict === 'PROMISING').length;
+        document.getElementById('statPosts').textContent = state.moltbook_posts?.length || 0;
+
+        if (state.last_scout) {
+            document.getElementById('lastRun').textContent = 'Last scout: ' + new Date(state.last_scout).toLocaleString();
+        }
+
+        // Projects list
+        renderProjects();
+        renderAnalyses();
+        renderLaunches();
+        updateReportSelect();
+    }
+
+    function renderProjects() {
+        const el = document.getElementById('projectsList');
+        const projects = state.scouted_projects || [];
+        if (!projects.length) {
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No projects scouted yet. Click Scout to start.</p></div>';
+            return;
+        }
+        el.innerHTML = projects.map((p, i) => `
+            <div class="card">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-semibold text-sm truncate">${esc(p.title || 'Untitled')}</h3>
+                        <p class="text-xs text-[var(--text2)] mt-1">by ${esc(p.author || '?')} ${p.submolt ? '· m/' + esc(p.submolt) : ''}</p>
+                        <p class="text-xs text-[var(--text2)] mt-2 line-clamp-2">${esc((p.body || '').substring(0, 200))}</p>
+                        <div class="flex gap-2 mt-2 flex-wrap">
+                            ${(p.github_urls || []).map(u => `<a href="${esc(u)}" target="_blank" class="text-xs text-[var(--accent2)] hover:underline">${esc(u.split('/').slice(-2).join('/'))}</a>`).join('')}
+                            ${(p.token_mentions || []).map(t => `<span class="badge badge-promising">$${esc(t)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-xs text-[var(--text2)]">${p.votes || 0} votes</p>
+                        <p class="text-xs text-[var(--text2)]">${p.comments || 0} comments</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAnalyses() {
+        const el = document.getElementById('analysesList');
+        const analyses = state.analyses || [];
+        if (!analyses.length) {
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No analyses yet.</p></div>';
+            return;
+        }
+        el.innerHTML = analyses.map((a, i) => {
+            const verdict = a.verdict || 'UNKNOWN';
+            const badgeClass = { STRONG_LAUNCH: 'badge-launch', PROMISING: 'badge-promising', NEEDS_WORK: 'badge-wait', SKIP: 'badge-skip' }[verdict] || 'badge-skip';
+            const scores = a.scores || {};
+            return `
+            <div class="card">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                        <h3 class="font-semibold text-sm">${esc(a.project_name || '?')}</h3>
+                        <p class="text-xs text-[var(--text2)] mt-1">${esc(a.summary || '')}</p>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <span class="badge ${badgeClass}">${verdict}</span>
+                        <p class="text-xl font-bold mono mt-1">${a.overall_score || 0}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-5 gap-2 text-xs">
+                    ${scoreBar('Market', scores.market_fit)}
+                    ${scoreBar('Team', scores.team_signal)}
+                    ${scoreBar('Tech', scores.technical_quality)}
+                    ${scoreBar('Token', scores.tokenomics_feasibility)}
+                    ${scoreBar('Traction', scores.traction)}
+                </div>
+                ${verdict === 'STRONG_LAUNCH' || verdict === 'PROMISING' ? `
+                <div class="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-2">
+                    <button onclick="launchToken(${i})" class="btn btn-primary text-xs py-1 px-3">Launch Token</button>
+                    <span class="text-xs text-[var(--text2)]">${a.tokenomics_advice?.suggested_name || ''} · ${a.tokenomics_advice?.bonding_curve || ''} curve</span>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function scoreBar(label, value) {
+        value = value || 0;
+        const color = value >= 75 ? 'var(--green)' : value >= 50 ? 'var(--blue)' : value >= 25 ? 'var(--yellow)' : 'var(--red)';
+        return `<div>
+            <div class="flex justify-between mb-1"><span class="text-[var(--text2)]">${label}</span><span class="mono">${value}</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:${value}%;background:${color}"></div></div>
+        </div>`;
+    }
+
+    function renderLaunches() {
+        const el = document.getElementById('launchesList');
+        const launches = state.launches || [];
+        if (!launches.length) {
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No launches yet.</p></div>';
+            return;
+        }
+        el.innerHTML = launches.map(l => `
+            <div class="card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-sm">${esc(l.project || '?')}</h3>
+                        <p class="text-xs text-[var(--text2)]">${esc(l.result?.status || 'unknown')} · ${new Date(l.timestamp).toLocaleString()}</p>
+                    </div>
+                    <span class="badge badge-launch">${l.result?.analysis_verdict || '?'}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateReportSelect() {
+        const sel = document.getElementById('reportSelect');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Select an analysis...</option>';
+        (state.analyses || []).forEach((a, i) => {
+            sel.innerHTML += `<option value="${i}">${a.project_name || '?'} (${a.overall_score || 0}/100)</option>`;
+        });
+        sel.value = current;
+    }
+
+    // ─── Radar Chart ────────────────────────────────────────
+    function showRadar(scores) {
+        document.getElementById('radarCard').style.display = 'block';
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        if (radarChartInstance) radarChartInstance.destroy();
+        radarChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Market Fit', 'Team Signal', 'Technical', 'Tokenomics', 'Traction'],
+                datasets: [{
+                    label: 'Score',
+                    data: [scores.market_fit||0, scores.team_signal||0, scores.technical_quality||0, scores.tokenomics_feasibility||0, scores.traction||0],
+                    borderColor: '#6c5ce7',
+                    backgroundColor: 'rgba(108,92,231,0.15)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#a29bfe',
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        ticks: { stepSize: 20, color: '#8888a4', backdropColor: 'transparent' },
+                        grid: { color: 'rgba(42,42,62,0.6)' },
+                        angleLines: { color: 'rgba(42,42,62,0.6)' },
+                        pointLabels: { color: '#e4e4ef', font: { size: 11 } },
+                    }
+                },
+                plugins: { legend: { display: false } },
+            }
+        });
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s || '';
+        return d.innerHTML;
+    }
+
+    // ─── Init ───────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        addLog('Dashboard initialized, loading state...', 'info');
+    });
+    </script>
+</body>
+</html>
