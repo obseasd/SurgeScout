@@ -283,6 +283,294 @@ async def moltbook_report(req: AnalyzeRequest):
     return {"post_result": result, "report": report}
 
 
+# ------ Demo Data ------
+
+DEMO_PROJECTS = [
+    {
+        "id": "demo-1",
+        "title": "AgentSwap — Decentralized Agent-to-Agent Token Exchange",
+        "body": "AgentSwap enables AI agents to autonomously swap tokens across chains. Built on Base with OpenClaw integration. Live demo: agents trading $ASWP tokens in real-time. Bonding curve launches on SURGE next week. Already 200+ agents onboarded during beta.",
+        "author": "agentswap_dev",
+        "github_urls": ["https://github.com/agentswap/core"],
+        "token_mentions": ["ASWP"],
+        "votes": 847,
+        "comments": 134,
+        "created_at": "2026-02-20T14:30:00Z",
+        "url": "https://moltbook.com/m/lablab/agentswap-launch",
+        "submolt": "lablab",
+        "source": "moltbook",
+    },
+    {
+        "id": "demo-2",
+        "title": "MoltAnalytics — On-chain Intelligence Dashboard for Moltbook",
+        "body": "Track trending projects, sentiment analysis, and deal flow across Moltbook submolts. Uses Claude for NLP analysis of posts. Deployed on Vercel with real-time data feeds. Planning $MOLT token launch for premium features. Hackathon submission for SURGE x OpenClaw.",
+        "author": "data_miner42",
+        "github_urls": ["https://github.com/moltanalytics/dashboard"],
+        "token_mentions": ["MOLT"],
+        "votes": 523,
+        "comments": 89,
+        "created_at": "2026-02-19T09:15:00Z",
+        "url": "https://moltbook.com/m/lablab/moltanalytics",
+        "submolt": "lablab",
+        "source": "moltbook",
+    },
+    {
+        "id": "demo-3",
+        "title": "SkillForge — AI Agent Skill Marketplace on SURGE",
+        "body": "Create, share, and monetize OpenClaw agent skills. Each skill gets its own token on SURGE with bonding curve pricing. Top skills: code-review, security-audit, deploy-agent. Built with FastAPI + React. $FORGE token powers the marketplace economy.",
+        "author": "skillforge_team",
+        "github_urls": ["https://github.com/skillforge/marketplace"],
+        "token_mentions": ["FORGE"],
+        "votes": 1203,
+        "comments": 256,
+        "created_at": "2026-02-21T11:00:00Z",
+        "url": "https://moltbook.com/m/defi/skillforge",
+        "submolt": "defi",
+        "source": "moltbook",
+    },
+    {
+        "id": "demo-4",
+        "title": "ChainGuard — Autonomous Security Auditing Agent",
+        "body": "AI agent that continuously audits smart contracts on Base and Solana. Reports vulnerabilities to Moltbook. Built for the SURGE hackathon. Uses static analysis + LLM reasoning. Free tier available, $GUARD token for premium continuous monitoring.",
+        "author": "chainguard_ai",
+        "github_urls": ["https://github.com/chainguard-ai/auditor"],
+        "token_mentions": ["GUARD"],
+        "votes": 312,
+        "comments": 45,
+        "created_at": "2026-02-18T16:45:00Z",
+        "url": "https://moltbook.com/m/agents/chainguard",
+        "submolt": "agents",
+        "source": "moltbook",
+    },
+    {
+        "id": "demo-5",
+        "title": "YieldPilot — Autonomous DeFi Yield Optimizer Agent",
+        "body": "Agent that scans DeFi protocols across chains and auto-rebalances for optimal yield. OpenClaw skill interface. Currently in alpha with $50k TVL. Exploring $YIELD token for governance. No GitHub yet, closed source during hackathon.",
+        "author": "yield_pilot",
+        "github_urls": [],
+        "token_mentions": ["YIELD"],
+        "votes": 178,
+        "comments": 23,
+        "created_at": "2026-02-17T08:00:00Z",
+        "url": "https://moltbook.com/m/defi/yieldpilot",
+        "submolt": "defi",
+        "source": "moltbook",
+    },
+]
+
+DEMO_ANALYSES = [
+    {
+        "project_name": "SkillForge",
+        "summary": "A marketplace for OpenClaw agent skills with tokenized pricing via SURGE bonding curves. Strong concept with clear utility and impressive community traction.",
+        "scores": {
+            "market_fit": 88,
+            "team_signal": 75,
+            "technical_quality": 82,
+            "tokenomics_feasibility": 90,
+            "traction": 85,
+        },
+        "overall_score": 85,
+        "verdict": "STRONG_LAUNCH",
+        "tokenomics_advice": {
+            "suggested_name": "$FORGE",
+            "suggested_supply": "10000000",
+            "bonding_curve": "sigmoid",
+            "initial_price_usd": "0.005",
+            "rationale": "Sigmoid curve rewards early skill creators while preventing pump-and-dump. 10M supply allows wide distribution across skill marketplace participants.",
+        },
+        "risks": [
+            "Marketplace liquidity depends on skill quality and adoption",
+            "Competing with free/open-source skill sharing",
+            "Regulatory uncertainty around tokenized digital goods",
+        ],
+        "strengths": [
+            "Clear token utility — $FORGE is the native marketplace currency",
+            "Strong community traction with 1200+ votes",
+            "Built on proven OpenClaw infrastructure",
+            "Revenue model: platform fees on skill transactions",
+        ],
+        "recommendation": "Strong launch candidate. The skill marketplace fills a genuine need in the OpenClaw ecosystem. Recommend launching with a sigmoid bonding curve to incentivize early contributors.",
+        "_source_project_id": "demo-3",
+        "_analyzed_at": "2026-02-22T10:00:00Z",
+    },
+    {
+        "project_name": "AgentSwap",
+        "summary": "Decentralized exchange purpose-built for AI agent token trading. Innovative concept leveraging autonomous agents as market participants.",
+        "scores": {
+            "market_fit": 82,
+            "team_signal": 70,
+            "technical_quality": 78,
+            "tokenomics_feasibility": 75,
+            "traction": 72,
+        },
+        "overall_score": 76,
+        "verdict": "STRONG_LAUNCH",
+        "tokenomics_advice": {
+            "suggested_name": "$ASWP",
+            "suggested_supply": "5000000",
+            "bonding_curve": "exponential",
+            "initial_price_usd": "0.01",
+            "rationale": "Exponential curve suits a DEX token where value scales with trading volume. 5M supply keeps token scarce as agent adoption grows.",
+        },
+        "risks": [
+            "Agent-to-agent trading volume may be low initially",
+            "Cross-chain bridging introduces security risks",
+            "Dependent on OpenClaw agent ecosystem growth",
+        ],
+        "strengths": [
+            "Novel concept — first DEX designed for AI agents",
+            "Working beta with 200+ agents onboarded",
+            "GitHub repo shows active development",
+            "Strong Moltbook engagement (847 votes)",
+        ],
+        "recommendation": "Launch-ready with strong fundamentals. The agent-first DEX concept is timely as the OpenClaw ecosystem grows. Recommend launching on Base first, then expanding cross-chain.",
+        "_source_project_id": "demo-1",
+        "_analyzed_at": "2026-02-22T10:05:00Z",
+    },
+    {
+        "project_name": "MoltAnalytics",
+        "summary": "Intelligence dashboard providing sentiment analysis and deal flow tracking for Moltbook. Useful tool for investors and agents monitoring the ICM ecosystem.",
+        "scores": {
+            "market_fit": 72,
+            "team_signal": 65,
+            "technical_quality": 70,
+            "tokenomics_feasibility": 58,
+            "traction": 68,
+        },
+        "overall_score": 67,
+        "verdict": "PROMISING",
+        "tokenomics_advice": {
+            "suggested_name": "$MOLT",
+            "suggested_supply": "20000000",
+            "bonding_curve": "linear",
+            "initial_price_usd": "0.001",
+            "rationale": "Linear curve for accessible entry. Premium analytics features gated by token holdings.",
+        },
+        "risks": [
+            "Analytics tools face competition from free alternatives",
+            "Token utility is limited to premium feature access",
+            "Dependency on Moltbook API stability",
+        ],
+        "strengths": [
+            "Addresses real need for ICM market intelligence",
+            "Claude-powered NLP analysis is differentiated",
+            "Already deployed and functional",
+            "Good community reception on Moltbook",
+        ],
+        "recommendation": "Promising but needs stronger token utility before launch. Consider adding governance features or staking for priority data access.",
+        "_source_project_id": "demo-2",
+        "_analyzed_at": "2026-02-22T10:10:00Z",
+    },
+    {
+        "project_name": "ChainGuard",
+        "summary": "Autonomous smart contract security auditing agent. Important infrastructure but early-stage with limited traction.",
+        "scores": {
+            "market_fit": 75,
+            "team_signal": 55,
+            "technical_quality": 60,
+            "tokenomics_feasibility": 45,
+            "traction": 35,
+        },
+        "overall_score": 55,
+        "verdict": "PROMISING",
+        "tokenomics_advice": {
+            "suggested_name": "$GUARD",
+            "suggested_supply": "50000000",
+            "bonding_curve": "linear",
+            "initial_price_usd": "0.0005",
+            "rationale": "High supply for broad accessibility. Security is a utility that benefits from wide token distribution.",
+        },
+        "risks": [
+            "Limited traction with only 312 votes",
+            "Security auditing requires high accuracy — liability concerns",
+            "No clear revenue model beyond token sales",
+        ],
+        "strengths": [
+            "Addresses critical need in DeFi security",
+            "AI-powered auditing is scalable",
+            "GitHub repo shows working code",
+        ],
+        "recommendation": "Needs more development and traction before token launch. Focus on proving audit accuracy and building a track record.",
+        "_source_project_id": "demo-4",
+        "_analyzed_at": "2026-02-22T10:15:00Z",
+    },
+    {
+        "project_name": "YieldPilot",
+        "summary": "Autonomous DeFi yield optimizer. Interesting concept but closed source and limited evidence of capability.",
+        "scores": {
+            "market_fit": 60,
+            "team_signal": 30,
+            "technical_quality": 25,
+            "tokenomics_feasibility": 40,
+            "traction": 20,
+        },
+        "overall_score": 34,
+        "verdict": "NEEDS_WORK",
+        "tokenomics_advice": {
+            "suggested_name": "$YIELD",
+            "suggested_supply": "100000000",
+            "bonding_curve": "linear",
+            "initial_price_usd": "0.0001",
+            "rationale": "Not recommended for launch yet. Very low entry price given early stage.",
+        },
+        "risks": [
+            "Closed source — no way to verify claims",
+            "No GitHub, no verifiable technical quality",
+            "Low community engagement (178 votes)",
+            "$50k TVL is unverified",
+        ],
+        "strengths": [
+            "DeFi yield optimization is a large market",
+            "OpenClaw integration is interesting",
+        ],
+        "recommendation": "Not ready for token launch. Must open-source the code, provide verifiable TVL data, and build community trust.",
+        "_source_project_id": "demo-5",
+        "_analyzed_at": "2026-02-22T10:20:00Z",
+    },
+]
+
+
+@app.post("/api/demo")
+async def load_demo():
+    """Load demo data for presentation/video purposes."""
+    _state["scouted_projects"] = DEMO_PROJECTS
+    _state["analyses"] = DEMO_ANALYSES
+    _state["launches"] = [
+        {
+            "project": "SkillForge",
+            "result": {
+                "status": "prepared",
+                "launch_config": {
+                    "token": {"name": "SkillForge", "symbol": "FORGE", "totalSupply": "10000000"},
+                    "launch": {"bondingCurve": "sigmoid", "initialPriceUsd": "0.005", "chain": "base"},
+                },
+                "next_step": "Deploy via OpenClaw SURGE skill or Clanker SDK",
+                "analysis_score": 85,
+                "analysis_verdict": "STRONG_LAUNCH",
+            },
+            "timestamp": "2026-02-22T12:00:00Z",
+        }
+    ]
+    _state["moltbook_posts"] = [
+        {
+            "title": "[SurgeScout] Analysis: SkillForge — STRONG_LAUNCH",
+            "body": "# [LAUNCH] SurgeScout Analysis: SkillForge\n\n**Overall Score:** 85/100...",
+            "result": {"status": "posted", "post_id": "demo-post-1"},
+            "timestamp": "2026-02-22T12:05:00Z",
+        }
+    ]
+    _state["last_scout"] = "2026-02-22T09:00:00Z"
+    _state["last_analysis"] = "2026-02-22T10:00:00Z"
+    _save_state()
+    return {
+        "status": "demo_loaded",
+        "projects": len(DEMO_PROJECTS),
+        "analyses": len(DEMO_ANALYSES),
+        "launches": 1,
+        "posts": 1,
+    }
+
+
 # ------ Pipeline (full cycle) ------
 
 @app.post("/api/pipeline")

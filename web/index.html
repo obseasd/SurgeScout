@@ -137,6 +137,7 @@
             <button onclick="runAnalyze()" class="btn btn-outline">Analyze All</button>
             <button onclick="postReport()" class="btn btn-outline">Post to Moltbook</button>
             <div class="flex-1"></div>
+            <button onclick="loadDemo()" class="btn btn-outline text-xs" style="border-color:var(--accent);color:var(--accent2)">Load Demo Data</button>
             <span class="text-xs text-[var(--text2)] mono" id="lastRun">Never run</span>
         </div>
 
@@ -327,6 +328,17 @@
             addLog('Report posted to Moltbook', 'success');
             await loadState();
         } catch (e) { addLog('Post failed: ' + e.message, 'error'); }
+        setStatus('Ready');
+    }
+
+    async function loadDemo() {
+        setStatus('Loading demo data...', true);
+        addLog('Loading demo data for presentation...', 'info');
+        try {
+            const result = await apiCall('/api/demo', 'POST', {});
+            addLog(`Demo loaded: ${result.projects} projects, ${result.analyses} analyses, ${result.launches} launches`, 'success');
+            await loadState();
+        } catch (e) { addLog('Demo load failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
