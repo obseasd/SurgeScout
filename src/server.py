@@ -122,8 +122,12 @@ async def health():
 
 @app.get("/api/state")
 async def get_state():
-    """Return full agent state."""
-    return _state
+    """Return full agent state with computed fields."""
+    launch_ready = sum(
+        1 for a in _state.get("analyses", [])
+        if a.get("verdict") == "STRONG_LAUNCH" and a.get("overall_score", 0) >= 75
+    )
+    return {**_state, "launch_ready_count": launch_ready}
 
 
 # ------ Scout ------
@@ -588,9 +592,11 @@ async def full_pipeline(req: ScoutRequest):
         _save_state()
         return {"status": "no_projects_found", "step": "scout"}
 
-    # 2. Analyze top candidates (max 5 to save API calls)
-    top_projects = projects[:5]
-    analyses = analyze_batch(top_projects, min_score=30)
+    # 2. Analyze top candidates (max 8, sorted by quality from scout)
+    top_projects = projects[:8]
+    analyses = analyze_batch(top_projects, min_score=0)  # Keep all results, even low scores
+    # Filter out error-only results but keep low scores for display
+    analyses = [a for a in analyses if not a.get("error") or a.get("overall_score", 0) > 0]
     _state["analyses"] = analyses
     _state["last_analysis"] = datetime.now(timezone.utc).isoformat()
 

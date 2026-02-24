@@ -196,4 +196,12 @@ def scout_moltbook(submolts: list[str] | None = None, keywords: list[str] | None
     projects = extract_projects_from_posts(all_posts)
     log.info(f"Extracted {len(projects)} project candidates from {len(all_posts)} posts")
 
+    # 5. Sort by quality signals (GitHub URLs, votes, token mentions)
+    projects.sort(key=lambda p: (
+        len(p.get("github_urls", [])) * 50 +  # GitHub = strongest signal
+        len(p.get("token_mentions", [])) * 20 +
+        min(p.get("votes", 0), 500) +
+        min(p.get("comments", 0), 100) * 2
+    ), reverse=True)
+
     return projects

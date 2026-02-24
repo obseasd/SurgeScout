@@ -383,7 +383,7 @@
         document.getElementById('statScouted').textContent = state.scouted_projects?.length || 0;
         document.getElementById('statAnalyzed').textContent = state.analyses?.length || 0;
         document.getElementById('statLaunchReady').textContent =
-            (state.analyses || []).filter(a => a.verdict === 'STRONG_LAUNCH' || a.verdict === 'PROMISING').length;
+            state.launch_ready_count || (state.analyses || []).filter(a => a.verdict === 'STRONG_LAUNCH').length;
         document.getElementById('statPosts').textContent = state.moltbook_posts?.length || 0;
 
         if (state.last_scout) {

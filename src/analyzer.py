@@ -195,15 +195,28 @@ def analyze_batch(projects: list[dict], min_score: int = 0) -> list[dict]:
     results = []
     for i, proj in enumerate(projects):
         log.info(f"Analyzing project {i+1}/{len(projects)}: {proj.get('title', '?')[:50]}")
-        analysis = analyze_project(proj)
+
+        # Try up to 2 times per project (retry on rate limit)
+        analysis = None
+        for attempt in range(2):
+            analysis = analyze_project(proj)
+            if not analysis.get("error"):
+                break
+            err = str(analysis.get("error", ""))
+            if "429" in err or "rate" in err.lower():
+                log.warning(f"Rate limited, waiting 10s before retry...")
+                time.sleep(10)
+            else:
+                break  # Non-rate-limit error, don't retry
+
         score = analysis.get("overall_score", 0)
         if analysis.get("error"):
             log.warning(f"Analysis error for {proj.get('title', '?')}: {analysis.get('error')}")
         if score >= min_score:
             results.append(analysis)
-        # Rate limit: wait 2s between API calls to avoid 429 errors
+        # Rate limit: wait 3s between API calls to avoid 429 errors
         if i < len(projects) - 1:
-            time.sleep(2)
+            time.sleep(3)
 
     results.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
     log.info(f"Batch analysis complete: {len(results)}/{len(projects)} above threshold {min_score}")
