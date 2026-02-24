@@ -9,20 +9,28 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
         :root {
-            --bg: #0a0a0f;
-            --surface: #12121a;
-            --surface2: #1a1a2e;
-            --border: #2a2a3e;
-            --text: #e4e4ef;
-            --text2: #8888a4;
-            --accent: #6c5ce7;
-            --accent2: #a29bfe;
+            --bg: #0d0d0f;
+            --surface: #141418;
+            --surface2: #1c1c22;
+            --surface3: #242430;
+            --border: #2a2a36;
+            --border-hover: #3a3a4a;
+            --text: #eaeaf0;
+            --text2: #7c7c8e;
+            --text3: #55556a;
+            --red: #e53935;
+            --red-light: #ff6b6b;
+            --red-dim: rgba(229, 57, 53, 0.12);
+            --red-glow: rgba(229, 57, 53, 0.25);
             --green: #00e676;
+            --green-dim: rgba(0, 230, 118, 0.12);
             --yellow: #ffd600;
-            --red: #ff5252;
+            --yellow-dim: rgba(255, 214, 0, 0.12);
             --blue: #448aff;
+            --blue-dim: rgba(68, 138, 255, 0.12);
+            --cyan: #26c6da;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -31,14 +39,12 @@
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
         }
-        .mono { font-family: 'JetBrains Mono', monospace; }
+        .mono { font-family: 'IBM Plex Mono', monospace; }
         .glass {
-            background: rgba(18, 18, 26, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
+            background: rgba(20, 20, 24, 0.9);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
         }
-        .glow { box-shadow: 0 0 20px rgba(108, 92, 231, 0.15); }
-        .glow-green { box-shadow: 0 0 20px rgba(0, 230, 118, 0.1); }
         .btn {
             padding: 10px 20px;
             border-radius: 8px;
@@ -46,205 +52,246 @@
             cursor: pointer;
             border: none;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 13px;
+            font-family: 'IBM Plex Mono', monospace;
+            letter-spacing: 0.3px;
         }
-        .btn-primary { background: var(--accent); color: #fff; }
-        .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .btn-green { background: var(--green); color: #0a0a0f; font-weight: 700; }
+        .btn-primary { background: var(--red); color: #fff; }
+        .btn-primary:hover { background: var(--red-light); box-shadow: 0 0 20px var(--red-glow); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-green { background: var(--green); color: #0d0d0f; font-weight: 700; }
         .btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text2); }
-        .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
+        .btn-outline:hover { border-color: var(--red); color: var(--red-light); }
+        .btn-demo { background: var(--surface2); border: 1px solid var(--red); color: var(--red-light); }
+        .btn-demo:hover { background: var(--red-dim); }
         .badge {
-            display: inline-block; padding: 2px 10px; border-radius: 99px;
-            font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+            display: inline-block; padding: 2px 10px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+            font-family: 'IBM Plex Mono', monospace;
+            text-transform: uppercase;
         }
-        .badge-launch { background: rgba(0,230,118,0.15); color: var(--green); }
-        .badge-promising { background: rgba(68,138,255,0.15); color: var(--blue); }
-        .badge-wait { background: rgba(255,214,0,0.15); color: var(--yellow); }
-        .badge-skip { background: rgba(255,82,82,0.15); color: var(--red); }
-        .badge-signal { background: rgba(108,92,231,0.15); color: var(--accent2); font-size: 10px; }
+        .badge-launch { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+        .badge-promising { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(68,138,255,0.2); }
+        .badge-wait { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(255,214,0,0.2); }
+        .badge-skip { background: var(--red-dim); color: var(--red-light); border: 1px solid rgba(229,57,53,0.2); }
+        .badge-signal { background: var(--surface3); color: var(--text2); font-size: 10px; border: 1px solid var(--border); }
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 20px;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .card:hover { border-color: rgba(108, 92, 231, 0.3); }
+        .card:hover { border-color: var(--border-hover); }
         .card-highlight {
-            border-color: rgba(0, 230, 118, 0.3);
-            background: linear-gradient(135deg, var(--surface), rgba(0,230,118,0.03));
+            border-color: rgba(0, 230, 118, 0.25);
+            background: linear-gradient(135deg, var(--surface), rgba(0,230,118,0.02));
         }
-        .score-bar {
-            height: 6px; border-radius: 3px; background: var(--surface2);
+        .card-red {
+            border-color: rgba(229, 57, 53, 0.25);
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 16px;
+            text-align: center;
+            position: relative;
             overflow: hidden;
         }
-        .score-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--border);
+        }
+        .stat-card.active::before {
+            background: var(--red);
+            box-shadow: 0 0 12px var(--red-glow);
+        }
+        .score-bar {
+            height: 4px; border-radius: 2px; background: var(--surface3);
+            overflow: hidden;
+        }
+        .score-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
         .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         .fadeIn { animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .markdown-body { line-height: 1.6; }
-        .markdown-body h1 { font-size: 1.5em; font-weight: 700; margin: 16px 0 8px; }
-        .markdown-body h2 { font-size: 1.2em; font-weight: 600; margin: 12px 0 6px; color: var(--accent2); }
-        .markdown-body p { margin: 6px 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .glow-red { box-shadow: 0 0 30px var(--red-glow); }
+        .markdown-body { line-height: 1.7; }
+        .markdown-body h1 { font-size: 1.4em; font-weight: 700; margin: 16px 0 8px; color: var(--red-light); }
+        .markdown-body h2 { font-size: 1.15em; font-weight: 600; margin: 12px 0 6px; color: var(--text); }
+        .markdown-body p { margin: 6px 0; color: var(--text2); }
         .markdown-body ul { padding-left: 20px; margin: 6px 0; }
-        .markdown-body li { margin: 3px 0; }
-        .markdown-body code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-        .markdown-body blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text2); margin: 8px 0; }
+        .markdown-body li { margin: 3px 0; color: var(--text2); }
+        .markdown-body code { background: var(--surface3); padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+        .markdown-body blockquote { border-left: 3px solid var(--red); padding-left: 12px; color: var(--text2); margin: 8px 0; }
         .markdown-body hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-        .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--text2); transition: all 0.2s; }
-        .tab.active { background: var(--accent); color: #fff; }
+        .tab {
+            padding: 8px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; font-weight: 500; color: var(--text2);
+            transition: all 0.2s; font-family: 'IBM Plex Mono', monospace;
+            border: 1px solid transparent;
+        }
+        .tab.active { background: var(--red-dim); color: var(--red-light); border-color: rgba(229,57,53,0.3); }
         .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
-        .tab .tab-count { background: var(--surface2); color: var(--text2); padding: 1px 6px; border-radius: 99px; font-size: 10px; margin-left: 4px; }
-        .tab.active .tab-count { background: rgba(255,255,255,0.2); color: #fff; }
+        .tab-count {
+            background: var(--surface3); color: var(--text3); padding: 1px 6px;
+            border-radius: 4px; font-size: 10px; margin-left: 4px;
+        }
+        .tab.active .tab-count { background: rgba(229,57,53,0.2); color: var(--red-light); }
         #log { max-height: 200px; overflow-y: auto; }
-        #log p { font-size: 12px; padding: 2px 0; border-bottom: 1px solid rgba(42,42,62,0.4); }
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .signal-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        #log p { font-size: 11px; padding: 3px 0; border-bottom: 1px solid rgba(42,42,54,0.5); }
+        .signal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .signal-strong { background: var(--green); box-shadow: 0 0 6px rgba(0,230,118,0.4); }
         .signal-medium { background: var(--blue); }
         .signal-weak { background: var(--yellow); }
-        .progress-ring { width: 48px; height: 48px; }
-        .divider { height: 1px; background: var(--border); margin: 16px 0; }
+        .verdict-bar {
+            display: flex; height: 6px; border-radius: 3px; overflow: hidden; gap: 2px;
+        }
+        .verdict-bar > div { border-radius: 2px; transition: width 0.4s ease; }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <img src="/static/logo.png" alt="SurgeScout" class="w-9 h-9 rounded-lg object-cover">
-            <div>
-                <h1 class="text-lg font-bold">SurgeScout</h1>
-                <p class="text-xs text-[var(--text2)]">AI Deal Flow for Internet Capital Markets</p>
+    <header class="glass sticky top-0 z-50 px-6 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="/static/logo.png" alt="SurgeScout" class="w-9 h-9 rounded-lg object-cover">
+                <div>
+                    <h1 class="text-base font-bold mono tracking-wide">SurgeScout</h1>
+                    <p class="text-[11px] text-[var(--text3)] mono">AI Deal Flow for Internet Capital Markets</p>
+                </div>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="text-xs text-[var(--accent2)] hover:underline hidden md:inline">Moltbook Profile</a>
-            <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="text-xs text-[var(--text2)] hover:text-[var(--text)] hidden md:inline">GitHub</a>
-            <span class="text-[var(--border)]">|</span>
-            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-            <span id="statusText" class="text-xs mono text-[var(--text2)]">Ready</span>
-            <a href="/api/health" target="_blank" class="btn btn-outline text-xs py-1 px-3">API</a>
+            <div class="flex items-center gap-4">
+                <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="text-xs mono text-[var(--text2)] hover:text-[var(--red-light)] transition hidden md:inline">m/surgescout</a>
+                <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="text-xs mono text-[var(--text2)] hover:text-[var(--text)] transition hidden md:inline">GitHub</a>
+                <div class="flex items-center gap-2 pl-3 border-l border-[var(--border)]">
+                    <span id="statusDot" class="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span id="statusText" class="text-[11px] mono text-[var(--text3)]">Ready</span>
+                </div>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-6 py-6 space-y-5">
         <!-- Stats Row -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="card text-center">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="stat-card active">
                 <p class="text-3xl font-bold mono" id="statScouted">0</p>
-                <p class="text-xs text-[var(--text2)] mt-1">Projects Scouted</p>
-                <p class="text-[10px] text-[var(--text2)] mt-0.5">from 5 submolts</p>
+                <p class="text-[11px] text-[var(--text3)] mono mt-1">SCOUTED</p>
             </div>
-            <div class="card text-center">
+            <div class="stat-card">
                 <p class="text-3xl font-bold mono" id="statAnalyzed">0</p>
-                <p class="text-xs text-[var(--text2)] mt-1">Analyzed by AI</p>
-                <p class="text-[10px] text-[var(--text2)] mt-0.5">5D scoring model</p>
+                <p class="text-[11px] text-[var(--text3)] mono mt-1">ANALYZED</p>
             </div>
-            <div class="card text-center" id="cardLaunchReady">
+            <div class="stat-card" id="cardLaunchReady">
                 <p class="text-3xl font-bold mono text-[var(--green)]" id="statLaunchReady">0</p>
-                <p class="text-xs text-[var(--text2)] mt-1">Launch Ready</p>
-                <p class="text-[10px] text-[var(--text2)] mt-0.5">score 75+</p>
+                <p class="text-[11px] text-[var(--text3)] mono mt-1">LAUNCH READY</p>
             </div>
-            <div class="card text-center">
-                <p class="text-3xl font-bold mono text-[var(--accent2)]" id="statPosts">4</p>
-                <p class="text-xs text-[var(--text2)] mt-1">Moltbook Posts</p>
-                <p class="text-[10px] text-[var(--text2)] mt-0.5"><a href="https://www.moltbook.com/u/surgescout" target="_blank" class="text-[var(--accent2)] hover:underline">@surgescout</a></p>
+            <div class="stat-card">
+                <p class="text-3xl font-bold mono text-[var(--red-light)]" id="statPosts">4</p>
+                <p class="text-[11px] text-[var(--text3)] mono mt-1">MOLTBOOK POSTS</p>
             </div>
         </div>
 
         <!-- Action Bar -->
-        <div class="card flex flex-wrap items-center gap-3">
+        <div class="card card-red flex flex-wrap items-center gap-3">
             <button onclick="runPipeline()" class="btn btn-primary" id="btnPipeline">
                 Run Full Pipeline
             </button>
             <button onclick="runScout()" class="btn btn-outline">Scout</button>
             <button onclick="runAnalyze()" class="btn btn-outline">Analyze Top 8</button>
-            <button onclick="postReport()" class="btn btn-outline">Post to Moltbook</button>
+            <button onclick="postReport()" class="btn btn-outline">Post Report</button>
             <div class="flex-1"></div>
-            <button onclick="loadDemo()" class="btn btn-green text-xs">Load Demo Data</button>
-            <span class="text-xs text-[var(--text2)] mono" id="lastRun">Never run</span>
+            <button onclick="loadDemo()" class="btn btn-demo">Load Demo</button>
+            <span class="text-[11px] text-[var(--text3)] mono" id="lastRun"></span>
         </div>
 
-        <!-- Pipeline Results Summary (hidden by default) -->
-        <div id="pipelineSummary" class="card glow fadeIn" style="display:none">
+        <!-- Pipeline Results Summary -->
+        <div id="pipelineSummary" class="card glow-red fadeIn" style="display:none">
             <div class="flex items-center gap-3 mb-3">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-green-500 flex items-center justify-center text-sm font-bold">P</div>
+                <img src="/static/logo.png" alt="" class="w-6 h-6 rounded">
                 <div>
-                    <h3 class="text-sm font-bold">Pipeline Results</h3>
-                    <p class="text-xs text-[var(--text2)]" id="summaryTimestamp"></p>
+                    <h3 class="text-sm font-bold mono">Pipeline Complete</h3>
+                    <p class="text-[11px] text-[var(--text3)] mono" id="summaryTimestamp"></p>
                 </div>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center" id="summaryGrid"></div>
+            <div class="grid grid-cols-4 gap-3 text-center" id="summaryGrid"></div>
         </div>
 
         <!-- Tabs -->
-        <div class="flex gap-2 overflow-x-auto pb-2" id="tabBar">
+        <div class="flex gap-2 overflow-x-auto pb-1" id="tabBar">
             <div class="tab active" onclick="switchTab('projects', this)">Scouted <span class="tab-count" id="tabCountProjects">0</span></div>
             <div class="tab" onclick="switchTab('analyses', this)">Analyses <span class="tab-count" id="tabCountAnalyses">0</span></div>
             <div class="tab" onclick="switchTab('launches', this)">Launches <span class="tab-count" id="tabCountLaunches">0</span></div>
-            <div class="tab" onclick="switchTab('report', this)">Report Viewer</div>
-            <div class="tab" onclick="switchTab('log', this)">Agent Log</div>
+            <div class="tab" onclick="switchTab('report', this)">Reports</div>
+            <div class="tab" onclick="switchTab('log', this)">Log</div>
         </div>
 
         <!-- Tab: Scouted Projects -->
-        <div id="tab-projects" class="space-y-3">
-            <div id="projectsList" class="space-y-3">
-                <div class="card text-center text-[var(--text2)] py-12">
-                    <p class="text-lg mb-2">No projects scouted yet</p>
-                    <p class="text-sm">Click <strong>Run Full Pipeline</strong> to scout Moltbook, analyze projects, and generate reports</p>
+        <div id="tab-projects" class="space-y-2">
+            <div id="projectsList" class="space-y-2">
+                <div class="card text-center text-[var(--text2)] py-16">
+                    <img src="/static/logo.png" alt="" class="w-12 h-12 mx-auto mb-4 opacity-30">
+                    <p class="text-sm mono mb-1">No projects scouted yet</p>
+                    <p class="text-xs text-[var(--text3)]">Click <strong class="text-[var(--red-light)]">Run Full Pipeline</strong> to scout Moltbook</p>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Analyses -->
         <div id="tab-analyses" class="space-y-3 hidden">
-            <!-- Verdict summary bar -->
             <div id="verdictSummary" class="card" style="display:none">
-                <div class="flex items-center gap-4 flex-wrap text-xs">
-                    <span class="font-semibold text-[var(--text2)]">Verdicts:</span>
-                    <span id="verdictLaunch" class="flex items-center gap-1"><span class="signal-dot signal-strong"></span> <span>0</span> STRONG_LAUNCH</span>
-                    <span id="verdictPromising" class="flex items-center gap-1"><span class="signal-dot signal-medium"></span> <span>0</span> PROMISING</span>
-                    <span id="verdictWait" class="flex items-center gap-1"><span class="signal-dot signal-weak"></span> <span>0</span> NEEDS_WORK</span>
-                    <span id="verdictSkip" class="flex items-center gap-1 text-[var(--text2)]"><span class="signal-dot" style="background:var(--red)"></span> <span>0</span> SKIP</span>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs mono text-[var(--text3)]">VERDICT DISTRIBUTION</span>
+                    <span class="text-xs mono text-[var(--text3)]" id="verdictTotal"></span>
+                </div>
+                <div class="verdict-bar mb-3" id="verdictBar"></div>
+                <div class="flex items-center gap-5 flex-wrap text-[11px] mono">
+                    <span id="verdictLaunch" class="flex items-center gap-1.5"><span class="signal-dot signal-strong"></span> <span>0</span> LAUNCH</span>
+                    <span id="verdictPromising" class="flex items-center gap-1.5"><span class="signal-dot signal-medium"></span> <span>0</span> PROMISING</span>
+                    <span id="verdictWait" class="flex items-center gap-1.5"><span class="signal-dot signal-weak"></span> <span>0</span> NEEDS_WORK</span>
+                    <span id="verdictSkip" class="flex items-center gap-1.5 text-[var(--text3)]"><span class="signal-dot" style="background:var(--red)"></span> <span>0</span> SKIP</span>
                 </div>
             </div>
-            <div id="analysesList" class="space-y-3">
-                <div class="card text-center text-[var(--text2)] py-12">
-                    <p>No analyses yet. Scout projects first, then analyze them.</p>
+            <div id="analysesList" class="space-y-2">
+                <div class="card text-center text-[var(--text2)] py-16">
+                    <p class="text-sm mono">No analyses yet</p>
+                    <p class="text-xs text-[var(--text3)]">Scout projects first, then analyze them</p>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Launches -->
-        <div id="tab-launches" class="space-y-3 hidden">
-            <div id="launchesList" class="space-y-3">
-                <div class="card text-center text-[var(--text2)] py-12">
-                    <p>No launches yet. Analyze projects to find launch candidates.</p>
+        <div id="tab-launches" class="space-y-2 hidden">
+            <div id="launchesList" class="space-y-2">
+                <div class="card text-center text-[var(--text2)] py-16">
+                    <p class="text-sm mono">No launches yet</p>
+                    <p class="text-xs text-[var(--text3)]">Find STRONG_LAUNCH candidates, then deploy on SURGE</p>
                 </div>
             </div>
         </div>
 
         <!-- Tab: Report Viewer -->
-        <div id="tab-report" class="hidden">
+        <div id="tab-report" class="hidden space-y-4">
             <div class="card">
                 <div class="flex items-center gap-3 mb-4">
-                    <select id="reportSelect" class="bg-[var(--surface2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm flex-1">
-                        <option value="">Select an analysis to view report...</option>
+                    <select id="reportSelect" class="bg-[var(--surface2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm flex-1 mono text-[var(--text2)]">
+                        <option value="">Select analysis...</option>
                     </select>
-                    <button onclick="viewReport()" class="btn btn-primary text-sm">View Report</button>
+                    <button onclick="viewReport()" class="btn btn-primary text-sm">View</button>
                 </div>
                 <div id="reportContent" class="markdown-body text-sm">
-                    <p class="text-[var(--text2)]">Select an analysis above to generate and view the full report with radar chart.</p>
+                    <p class="text-[var(--text3)]">Select an analysis to generate the full report with radar chart.</p>
                 </div>
             </div>
-            <!-- Radar Chart -->
-            <div class="card mt-4" id="radarCard" style="display:none">
-                <h3 class="text-sm font-semibold mb-3">Score Breakdown</h3>
-                <div style="max-width:400px;margin:auto">
+            <div class="card" id="radarCard" style="display:none">
+                <h3 class="text-xs mono text-[var(--text3)] mb-3 uppercase tracking-wider">Score Breakdown</h3>
+                <div style="max-width:380px;margin:auto">
                     <canvas id="radarChart"></canvas>
                 </div>
             </div>
@@ -254,35 +301,32 @@
         <div id="tab-log" class="hidden">
             <div class="card">
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-semibold">Agent Activity Log</h3>
-                    <button onclick="clearLog()" class="text-xs text-[var(--text2)] hover:text-[var(--red)]">Clear</button>
+                    <h3 class="text-xs mono text-[var(--text3)] uppercase tracking-wider">Agent Activity Log</h3>
+                    <button onclick="clearLog()" class="text-[11px] mono text-[var(--text3)] hover:text-[var(--red)]">Clear</button>
                 </div>
-                <div id="log" class="mono text-xs space-y-0">
-                    <p class="text-[var(--text2)]">[init] SurgeScout dashboard loaded</p>
+                <div id="log" class="mono space-y-0">
+                    <p class="text-[var(--text3)]">[init] SurgeScout dashboard loaded</p>
                 </div>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="text-center py-8 text-xs text-[var(--text2)] space-y-1">
-        <p>SurgeScout v1.0 — Built for SURGE x OpenClaw Hackathon on lablab.ai</p>
-        <p>
-            <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="hover:text-[var(--accent2)]">GitHub</a>
-            <span class="mx-2">|</span>
-            <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="hover:text-[var(--accent2)]">Moltbook</a>
-            <span class="mx-2">|</span>
-            <a href="/api/health" target="_blank" class="hover:text-[var(--accent2)]">API Health</a>
+    <footer class="text-center py-8 text-[11px] text-[var(--text3)] mono space-y-2 border-t border-[var(--border)]">
+        <p>SurgeScout v1.0 &mdash; SURGE x OpenClaw Hackathon &mdash; lablab.ai</p>
+        <p class="flex items-center justify-center gap-4">
+            <a href="https://github.com/obseasd/SurgeScout" target="_blank" class="hover:text-[var(--red-light)] transition">GitHub</a>
+            <a href="https://www.moltbook.com/u/surgescout" target="_blank" class="hover:text-[var(--red-light)] transition">Moltbook</a>
+            <a href="/api/health" target="_blank" class="hover:text-[var(--red-light)] transition">API</a>
         </p>
     </footer>
 
     <script>
     const API = '';
-    const OPENCLAW_POSTS = 4; // Posts made via OpenClaw agent on m/lablab
+    const OPENCLAW_POSTS = 4;
     let state = { scouted_projects: [], analyses: [], launches: [], moltbook_posts: [] };
     let radarChartInstance = null;
 
-    // ─── Tab switching ──────────────────────────────────────
     function switchTab(name, el) {
         document.querySelectorAll('[id^="tab-"]').forEach(e => e.classList.add('hidden'));
         document.getElementById('tab-' + name).classList.remove('hidden');
@@ -290,9 +334,8 @@
         if (el) el.classList.add('active');
     }
 
-    // ─── Logging ────────────────────────────────────────────
     function addLog(msg, level = 'info') {
-        const colors = { info: 'var(--text2)', success: 'var(--green)', error: 'var(--red)', warn: 'var(--yellow)' };
+        const colors = { info: 'var(--text3)', success: 'var(--green)', error: 'var(--red)', warn: 'var(--yellow)' };
         const el = document.getElementById('log');
         const time = new Date().toLocaleTimeString();
         el.innerHTML += `<p style="color:${colors[level] || colors.info}">[${time}] ${msg}</p>`;
@@ -300,11 +343,10 @@
     }
     function clearLog() { document.getElementById('log').innerHTML = ''; }
 
-    // ─── Status ─────────────────────────────────────────────
     function setStatus(text, busy = false) {
         document.getElementById('statusText').textContent = text;
         const dot = document.getElementById('statusDot');
-        dot.className = 'w-2.5 h-2.5 rounded-full ' + (busy ? 'bg-yellow-400 pulse' : 'bg-green-500');
+        dot.className = 'w-2 h-2 rounded-full ' + (busy ? 'bg-yellow-400 pulse' : 'bg-green-500');
     }
 
     function setButtonLoading(id, loading) {
@@ -315,7 +357,6 @@
         btn.textContent = loading ? 'Running...' : (btn.dataset.orig || btn.textContent);
     }
 
-    // ─── API calls ──────────────────────────────────────────
     async function apiCall(endpoint, method = 'GET', body = null) {
         const opts = { method, headers: { 'Content-Type': 'application/json' } };
         if (body) opts.body = JSON.stringify(body);
@@ -333,45 +374,37 @@
         }
     }
 
-    // ─── Actions ────────────────────────────────────────────
     async function runPipeline() {
         setStatus('Running pipeline...', true);
         setButtonLoading('btnPipeline', true);
-        addLog('Starting full pipeline: Scout -> Analyze -> Report', 'info');
+        addLog('Pipeline: Scout -> Analyze -> Report', 'info');
         try {
             const result = await apiCall('/api/pipeline', 'POST', {
                 submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
             });
-            addLog(`Pipeline complete: ${result.scouted} scouted, ${result.analyzed} analyzed`, 'success');
-            if (result.best_project) {
-                addLog(`Best project: ${result.best_project} (score: ${result.best_score})`, 'success');
-            }
+            addLog(`Done: ${result.scouted} scouted, ${result.analyzed} analyzed`, 'success');
+            if (result.best_project) addLog(`Best: ${result.best_project} (${result.best_score}/100)`, 'success');
             showPipelineSummary(result);
             await loadState();
-            // Auto-switch to analyses tab
             switchTab('analyses', document.querySelectorAll('.tab')[1]);
-        } catch (e) {
-            addLog('Pipeline failed: ' + e.message, 'error');
-        }
+        } catch (e) { addLog('Pipeline failed: ' + e.message, 'error'); }
         setStatus('Ready');
         setButtonLoading('btnPipeline', false);
     }
 
     async function runScout() {
-        setStatus('Scouting Moltbook...', true);
-        addLog('Scouting 5 submolts + trending + keyword search...', 'info');
+        setStatus('Scouting...', true);
+        addLog('Scouting 5 submolts + trending + keywords...', 'info');
         try {
-            const result = await apiCall('/api/scout', 'POST', {
-                submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups']
-            });
-            addLog(`Found ${result.count} project candidates`, 'success');
+            const result = await apiCall('/api/scout', 'POST', { submolts: ['lablab', 'cryptocurrency', 'defi', 'agents', 'startups'] });
+            addLog(`Found ${result.count} candidates`, 'success');
             await loadState();
         } catch (e) { addLog('Scout failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
     async function runAnalyze() {
-        setStatus('Analyzing top projects with Claude...', true);
+        setStatus('Analyzing with Claude...', true);
         addLog('Analyzing top 8 projects (5D scoring)...', 'info');
         try {
             const result = await apiCall('/api/analyze', 'POST', { min_score: 0 });
@@ -383,10 +416,10 @@
     }
 
     async function postReport() {
-        setStatus('Posting to Moltbook...', true);
-        addLog('Posting analysis report to Moltbook...', 'info');
+        setStatus('Posting...', true);
+        addLog('Posting report to Moltbook...', 'info');
         try {
-            const result = await apiCall('/api/moltbook/report', 'POST', {});
+            await apiCall('/api/moltbook/report', 'POST', {});
             addLog('Report posted to Moltbook', 'success');
             await loadState();
         } catch (e) { addLog('Post failed: ' + e.message, 'error'); }
@@ -394,23 +427,23 @@
     }
 
     async function loadDemo() {
-        setStatus('Loading demo data...', true);
-        addLog('Loading curated demo data for presentation...', 'info');
+        setStatus('Loading demo...', true);
+        addLog('Loading curated demo data...', 'info');
         try {
             const result = await apiCall('/api/demo', 'POST', {});
-            addLog(`Demo loaded: ${result.projects} projects, ${result.analyses} analyses, ${result.launches} launches`, 'success');
+            addLog(`Demo: ${result.projects} projects, ${result.analyses} analyses, ${result.launches} launches`, 'success');
             await loadState();
             switchTab('analyses', document.querySelectorAll('.tab')[1]);
-        } catch (e) { addLog('Demo load failed: ' + e.message, 'error'); }
+        } catch (e) { addLog('Demo failed: ' + e.message, 'error'); }
         setStatus('Ready');
     }
 
     async function launchToken(index) {
-        setStatus('Preparing token launch on SURGE...', true);
-        addLog(`Launching token for analysis #${index}...`, 'info');
+        setStatus('Preparing launch...', true);
+        addLog(`Launching token #${index} on SURGE...`, 'info');
         try {
             const result = await apiCall('/api/launch', 'POST', { analysis_index: index, chain: 'base' });
-            addLog(`Launch result: ${result.status || 'prepared'}`, result.error ? 'error' : 'success');
+            addLog(`Launch: ${result.status || 'prepared'}`, result.error ? 'error' : 'success');
             await loadState();
             switchTab('launches', document.querySelectorAll('.tab')[2]);
         } catch (e) { addLog('Launch failed: ' + e.message, 'error'); }
@@ -421,66 +454,60 @@
         const idx = document.getElementById('reportSelect').value;
         if (idx === '') return;
         const contentEl = document.getElementById('reportContent');
-        contentEl.innerHTML = '<p style="color:var(--text2)">Loading report...</p>';
+        contentEl.innerHTML = '<p style="color:var(--text3)" class="mono text-xs">Loading report...</p>';
         try {
             const result = await apiCall(`/api/report/${idx}`);
             const reportText = result.report || 'No report content';
             try {
                 contentEl.innerHTML = (typeof marked.parse === 'function') ? marked.parse(reportText) : (typeof marked === 'function') ? marked(reportText) : reportText.replace(/\n/g, '<br>');
-            } catch (parseErr) {
+            } catch (e) {
                 contentEl.innerHTML = reportText.replace(/\n/g, '<br>');
             }
             const scores = result.analysis?.scores;
             if (scores) showRadar(scores);
-            addLog('Report loaded for index ' + idx, 'success');
+            addLog('Report loaded #' + idx, 'success');
         } catch (e) {
-            contentEl.innerHTML = `<p style="color:var(--red)">Error loading report: ${e.message}</p>`;
-            addLog('Report load failed: ' + e.message, 'error');
+            contentEl.innerHTML = `<p style="color:var(--red)" class="mono text-xs">Error: ${e.message}</p>`;
+            addLog('Report failed: ' + e.message, 'error');
         }
     }
 
-    // ─── Pipeline Summary ───────────────────────────────────
     function showPipelineSummary(result) {
         const el = document.getElementById('pipelineSummary');
         el.style.display = 'block';
         document.getElementById('summaryTimestamp').textContent = new Date().toLocaleString();
-        const launchCount = (result.reports || []).filter(r => r.verdict === 'STRONG_LAUNCH').length;
-        const promisingCount = (result.reports || []).filter(r => r.verdict === 'PROMISING').length;
+        const lc = (result.reports || []).filter(r => r.verdict === 'STRONG_LAUNCH').length;
+        const pc = (result.reports || []).filter(r => r.verdict === 'PROMISING').length;
         document.getElementById('summaryGrid').innerHTML = `
-            <div><p class="text-lg font-bold mono">${result.scouted || 0}</p><p class="text-[10px] text-[var(--text2)]">Scouted</p></div>
-            <div><p class="text-lg font-bold mono">${result.analyzed || 0}</p><p class="text-[10px] text-[var(--text2)]">Analyzed</p></div>
-            <div><p class="text-lg font-bold mono text-[var(--green)]">${launchCount}</p><p class="text-[10px] text-[var(--text2)]">Launch Ready</p></div>
-            <div><p class="text-lg font-bold mono text-[var(--blue)]">${promisingCount}</p><p class="text-[10px] text-[var(--text2)]">Promising</p></div>
-            ${result.best_project ? `<div class="col-span-2 md:col-span-4 text-left mt-2 pt-2 border-t border-[var(--border)]"><span class="text-xs text-[var(--text2)]">Best candidate:</span> <span class="text-sm font-semibold">${esc(result.best_project)}</span> <span class="mono text-sm text-[var(--green)]">${result.best_score}/100</span></div>` : ''}
+            <div><p class="text-lg font-bold mono">${result.scouted||0}</p><p class="text-[10px] text-[var(--text3)] mono">SCOUTED</p></div>
+            <div><p class="text-lg font-bold mono">${result.analyzed||0}</p><p class="text-[10px] text-[var(--text3)] mono">ANALYZED</p></div>
+            <div><p class="text-lg font-bold mono text-[var(--green)]">${lc}</p><p class="text-[10px] text-[var(--text3)] mono">LAUNCH</p></div>
+            <div><p class="text-lg font-bold mono text-[var(--blue)]">${pc}</p><p class="text-[10px] text-[var(--text3)] mono">PROMISING</p></div>
+            ${result.best_project ? `<div class="col-span-4 text-left mt-2 pt-2 border-t border-[var(--border)]"><span class="text-[11px] text-[var(--text3)] mono">Best:</span> <span class="text-sm font-semibold mono">${esc(result.best_project)}</span> <span class="mono text-sm text-[var(--green)]">${result.best_score}</span></div>` : ''}
         `;
     }
 
-    // ─── Render UI ──────────────────────────────────────────
     function updateUI() {
         const projects = state.scouted_projects || [];
         const analyses = state.analyses || [];
         const launches = state.launches || [];
         const posts = state.moltbook_posts || [];
 
-        // Stats
         document.getElementById('statScouted').textContent = projects.length;
         document.getElementById('statAnalyzed').textContent = analyses.length;
-        const launchReady = state.launch_ready_count || analyses.filter(a => a.verdict === 'STRONG_LAUNCH').length;
-        document.getElementById('statLaunchReady').textContent = launchReady;
+        const lr = state.launch_ready_count || analyses.filter(a => a.verdict === 'STRONG_LAUNCH').length;
+        document.getElementById('statLaunchReady').textContent = lr;
         document.getElementById('statPosts').textContent = Math.max(OPENCLAW_POSTS, posts.length + OPENCLAW_POSTS);
 
-        // Highlight launch ready card
         const lrCard = document.getElementById('cardLaunchReady');
-        if (launchReady > 0) lrCard.classList.add('card-highlight', 'glow-green');
-        else lrCard.classList.remove('card-highlight', 'glow-green');
+        if (lr > 0) { lrCard.classList.add('card-highlight'); lrCard.querySelector('::before')?.remove; }
 
-        // Tab counts
         document.getElementById('tabCountProjects').textContent = projects.length;
         document.getElementById('tabCountAnalyses').textContent = analyses.length;
         document.getElementById('tabCountLaunches').textContent = launches.length;
 
         if (state.last_scout) {
-            document.getElementById('lastRun').textContent = 'Last scout: ' + new Date(state.last_scout).toLocaleString();
+            document.getElementById('lastRun').textContent = new Date(state.last_scout).toLocaleString();
         }
 
         renderProjects();
@@ -494,86 +521,83 @@
         const el = document.getElementById('projectsList');
         const projects = state.scouted_projects || [];
         if (!projects.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p class="text-lg mb-2">No projects scouted yet</p><p class="text-sm">Click <strong>Run Full Pipeline</strong> to scout Moltbook for tokenization candidates</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-16"><img src="/static/logo.png" alt="" class="w-12 h-12 mx-auto mb-4 opacity-20"><p class="text-sm mono">No projects scouted yet</p><p class="text-xs text-[var(--text3)]">Click <strong class="text-[var(--red-light)]">Run Full Pipeline</strong> to start</p></div>';
             return;
         }
         el.innerHTML = projects.slice(0, 50).map((p, i) => {
-            const signals = [];
-            if ((p.github_urls || []).length) signals.push('GitHub');
-            if ((p.token_mentions || []).length) signals.push('Token');
-            if ((p.votes || 0) >= 20) signals.push('Traction');
-            const signalStrength = signals.length >= 3 ? 'strong' : signals.length >= 2 ? 'medium' : 'weak';
+            const sigs = [];
+            if ((p.github_urls || []).length) sigs.push('github');
+            if ((p.token_mentions || []).length) sigs.push('token');
+            if ((p.votes || 0) >= 20) sigs.push('traction');
+            const strength = sigs.length >= 3 ? 'strong' : sigs.length >= 2 ? 'medium' : 'weak';
             return `
-            <div class="card fadeIn" style="animation-delay:${Math.min(i*30, 300)}ms">
+            <div class="card fadeIn" style="animation-delay:${Math.min(i*20,200)}ms">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
-                            <span class="signal-dot signal-${signalStrength}" title="${signals.join(', ') || 'Weak signal'}"></span>
+                            <span class="signal-dot signal-${strength}"></span>
                             <h3 class="font-semibold text-sm truncate">${esc(p.title || 'Untitled')}</h3>
                         </div>
-                        <p class="text-xs text-[var(--text2)] mt-1">by ${esc(p.author || '?')} ${p.submolt ? '· m/' + esc(p.submolt) : ''}</p>
-                        <p class="text-xs text-[var(--text2)] mt-2 line-clamp-2">${esc(stripMd((p.body || '').substring(0, 200)))}</p>
-                        <div class="flex gap-2 mt-2 flex-wrap">
-                            ${(p.github_urls || []).map(u => `<a href="${esc(u)}" target="_blank" class="badge badge-signal hover:underline">${esc(u.split('/').slice(-2).join('/'))}</a>`).join('')}
-                            ${(p.token_mentions || []).map(t => `<span class="badge badge-promising">$${esc(t)}</span>`).join('')}
+                        <p class="text-[11px] text-[var(--text3)] mono mt-1">${esc(p.author || '?')} ${p.submolt ? '&middot; m/' + esc(p.submolt) : ''}</p>
+                        <p class="text-xs text-[var(--text2)] mt-1.5 line-clamp-2">${esc(stripMd((p.body||'').substring(0,180)))}</p>
+                        <div class="flex gap-1.5 mt-2 flex-wrap">
+                            ${(p.github_urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" class="badge badge-signal hover:text-[var(--red-light)]">${esc(u.split('/').slice(-2).join('/'))}</a>`).join('')}
+                            ${(p.token_mentions||[]).map(t=>`<span class="badge badge-promising">$${esc(t)}</span>`).join('')}
                         </div>
                     </div>
-                    <div class="text-right flex-shrink-0">
-                        <p class="text-sm font-bold mono">${p.votes || 0}</p>
-                        <p class="text-[10px] text-[var(--text2)]">votes</p>
-                        <p class="text-xs text-[var(--text2)] mt-1">${p.comments || 0} comments</p>
+                    <div class="text-right flex-shrink-0 mono">
+                        <p class="text-base font-bold">${p.votes||0}</p>
+                        <p class="text-[10px] text-[var(--text3)]">votes</p>
                     </div>
                 </div>
             </div>`;
         }).join('');
-        if (projects.length > 50) {
-            el.innerHTML += `<p class="text-center text-xs text-[var(--text2)] py-2">+ ${projects.length - 50} more projects</p>`;
-        }
+        if (projects.length > 50) el.innerHTML += `<p class="text-center text-[11px] text-[var(--text3)] mono py-2">+ ${projects.length-50} more</p>`;
     }
 
     function renderAnalyses() {
         const el = document.getElementById('analysesList');
         const analyses = state.analyses || [];
         if (!analyses.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No analyses yet. Run the pipeline or click Analyze.</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-16"><p class="text-sm mono">No analyses yet</p></div>';
             return;
         }
         el.innerHTML = analyses.map((a, i) => {
-            const verdict = a.verdict || 'UNKNOWN';
-            const badgeClass = { STRONG_LAUNCH: 'badge-launch', PROMISING: 'badge-promising', NEEDS_WORK: 'badge-wait', SKIP: 'badge-skip', ERROR: 'badge-skip' }[verdict] || 'badge-skip';
-            const scores = a.scores || {};
-            const isLaunchable = verdict === 'STRONG_LAUNCH';
+            const v = a.verdict || 'UNKNOWN';
+            const bc = { STRONG_LAUNCH:'badge-launch', PROMISING:'badge-promising', NEEDS_WORK:'badge-wait', SKIP:'badge-skip', ERROR:'badge-skip' }[v] || 'badge-skip';
+            const s = a.scores || {};
+            const isL = v === 'STRONG_LAUNCH';
             return `
-            <div class="card fadeIn ${isLaunchable ? 'card-highlight' : ''}" style="animation-delay:${i*50}ms">
+            <div class="card fadeIn ${isL?'card-highlight':''}" style="animation-delay:${i*40}ms">
                 <div class="flex items-start justify-between gap-3 mb-3">
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <h3 class="font-semibold">${esc(a.project_name || '?')}</h3>
-                            <span class="badge ${badgeClass}">${verdict}</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="font-bold text-sm mono">${esc(a.project_name||'?')}</h3>
+                            <span class="badge ${bc}">${v}</span>
                         </div>
-                        <p class="text-xs text-[var(--text2)] mt-1 line-clamp-2">${esc(a.summary || '')}</p>
+                        <p class="text-xs text-[var(--text2)] mt-1 line-clamp-2">${esc(a.summary||'')}</p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                        <p class="text-2xl font-bold mono ${isLaunchable ? 'text-[var(--green)]' : ''}">${a.overall_score || 0}</p>
-                        <p class="text-[10px] text-[var(--text2)]">/ 100</p>
+                        <p class="text-2xl font-bold mono ${isL?'text-[var(--green)]':''}">${a.overall_score||0}</p>
+                        <p class="text-[10px] text-[var(--text3)] mono">/100</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-5 gap-2 text-xs">
-                    ${scoreBar('Market', scores.market_fit)}
-                    ${scoreBar('Team', scores.team_signal)}
-                    ${scoreBar('Tech', scores.technical_quality)}
-                    ${scoreBar('Token', scores.tokenomics_feasibility)}
-                    ${scoreBar('Traction', scores.traction)}
+                <div class="grid grid-cols-5 gap-2 text-[11px]">
+                    ${scoreBar('Market',s.market_fit)}
+                    ${scoreBar('Team',s.team_signal)}
+                    ${scoreBar('Tech',s.technical_quality)}
+                    ${scoreBar('Token',s.tokenomics_feasibility)}
+                    ${scoreBar('Traction',s.traction)}
                 </div>
-                ${a.tokenomics_advice ? `
+                ${a.tokenomics_advice?`
                 <div class="mt-3 pt-3 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-2">
-                    <div class="flex items-center gap-3 text-xs text-[var(--text2)]">
-                        <span class="mono font-bold text-[var(--accent2)]">${a.tokenomics_advice.suggested_name || ''}</span>
-                        <span>${a.tokenomics_advice.bonding_curve || ''} curve</span>
-                        <span>Supply: ${Number(a.tokenomics_advice.suggested_supply || 0).toLocaleString()}</span>
+                    <div class="flex items-center gap-3 text-[11px] text-[var(--text3)] mono">
+                        <span class="font-bold ${isL?'text-[var(--green)]':'text-[var(--text2)]'}">${a.tokenomics_advice.suggested_name||''}</span>
+                        <span>${a.tokenomics_advice.bonding_curve||''}</span>
+                        <span>${Number(a.tokenomics_advice.suggested_supply||0).toLocaleString()}</span>
                     </div>
-                    ${isLaunchable || verdict === 'PROMISING' ? `<button onclick="launchToken(${i})" class="btn ${isLaunchable ? 'btn-green' : 'btn-outline'} text-xs py-1 px-3">Launch on SURGE</button>` : ''}
-                </div>` : ''}
+                    ${isL||v==='PROMISING'?`<button onclick="launchToken(${i})" class="btn ${isL?'btn-green':'btn-outline'} text-[11px] py-1 px-3">Launch on SURGE</button>`:''}
+                </div>`:''}
             </div>`;
         }).join('');
     }
@@ -581,21 +605,30 @@
     function updateVerdictSummary() {
         const analyses = state.analyses || [];
         const el = document.getElementById('verdictSummary');
-        if (!analyses.length) { el.style.display = 'none'; return; }
-        el.style.display = 'block';
-        const counts = { STRONG_LAUNCH: 0, PROMISING: 0, NEEDS_WORK: 0, SKIP: 0 };
-        analyses.forEach(a => { if (counts.hasOwnProperty(a.verdict)) counts[a.verdict]++; });
-        document.querySelector('#verdictLaunch span:nth-child(2)').textContent = counts.STRONG_LAUNCH;
-        document.querySelector('#verdictPromising span:nth-child(2)').textContent = counts.PROMISING;
-        document.querySelector('#verdictWait span:nth-child(2)').textContent = counts.NEEDS_WORK;
-        document.querySelector('#verdictSkip span:nth-child(2)').textContent = counts.SKIP;
+        if (!analyses.length) { el.style.display='none'; return; }
+        el.style.display='block';
+        const c = { STRONG_LAUNCH:0, PROMISING:0, NEEDS_WORK:0, SKIP:0 };
+        analyses.forEach(a=>{ if(c.hasOwnProperty(a.verdict)) c[a.verdict]++; });
+        const total = analyses.length;
+        document.getElementById('verdictTotal').textContent = total + ' projects';
+        document.querySelector('#verdictLaunch span:nth-child(2)').textContent = c.STRONG_LAUNCH;
+        document.querySelector('#verdictPromising span:nth-child(2)').textContent = c.PROMISING;
+        document.querySelector('#verdictWait span:nth-child(2)').textContent = c.NEEDS_WORK;
+        document.querySelector('#verdictSkip span:nth-child(2)').textContent = c.SKIP;
+        const bar = document.getElementById('verdictBar');
+        bar.innerHTML = `
+            ${c.STRONG_LAUNCH?`<div style="width:${c.STRONG_LAUNCH/total*100}%;background:var(--green)"></div>`:''}
+            ${c.PROMISING?`<div style="width:${c.PROMISING/total*100}%;background:var(--blue)"></div>`:''}
+            ${c.NEEDS_WORK?`<div style="width:${c.NEEDS_WORK/total*100}%;background:var(--yellow)"></div>`:''}
+            ${c.SKIP?`<div style="width:${c.SKIP/total*100}%;background:var(--red)"></div>`:''}
+        `;
     }
 
     function scoreBar(label, value) {
         value = value || 0;
-        const color = value >= 75 ? 'var(--green)' : value >= 50 ? 'var(--blue)' : value >= 25 ? 'var(--yellow)' : 'var(--red)';
+        const color = value>=75?'var(--green)':value>=50?'var(--blue)':value>=25?'var(--yellow)':'var(--red)';
         return `<div>
-            <div class="flex justify-between mb-1"><span class="text-[var(--text2)]">${label}</span><span class="mono">${value}</span></div>
+            <div class="flex justify-between mb-1"><span class="text-[var(--text3)] mono">${label}</span><span class="mono font-semibold">${value}</span></div>
             <div class="score-bar"><div class="score-fill" style="width:${value}%;background:${color}"></div></div>
         </div>`;
     }
@@ -604,24 +637,24 @@
         const el = document.getElementById('launchesList');
         const launches = state.launches || [];
         if (!launches.length) {
-            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-12"><p>No launches yet. Analyze projects to find STRONG_LAUNCH candidates, then click "Launch on SURGE".</p></div>';
+            el.innerHTML = '<div class="card text-center text-[var(--text2)] py-16"><p class="text-sm mono">No launches yet</p></div>';
             return;
         }
-        el.innerHTML = launches.map((l, i) => `
-            <div class="card card-highlight fadeIn" style="animation-delay:${i*50}ms">
+        el.innerHTML = launches.map((l,i) => `
+            <div class="card card-highlight fadeIn" style="animation-delay:${i*40}ms">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-semibold">${esc(l.project || '?')}</h3>
-                        <p class="text-xs text-[var(--text2)] mt-1">${esc(l.result?.status || 'prepared')} · ${l.result?.launch_config?.launch?.chain || 'base'} · ${new Date(l.timestamp).toLocaleString()}</p>
-                        ${l.result?.launch_config?.token ? `<div class="flex gap-3 mt-2 text-xs text-[var(--text2)]">
-                            <span class="mono font-bold text-[var(--green)]">$${l.result.launch_config.token.symbol}</span>
-                            <span>Supply: ${Number(l.result.launch_config.token.totalSupply).toLocaleString()}</span>
-                            <span>${l.result.launch_config.launch?.bondingCurve || ''} curve</span>
-                        </div>` : ''}
+                        <h3 class="font-bold mono">${esc(l.project||'?')}</h3>
+                        <p class="text-[11px] text-[var(--text3)] mono mt-1">${esc(l.result?.status||'prepared')} &middot; ${l.result?.launch_config?.launch?.chain||'base'} &middot; ${new Date(l.timestamp).toLocaleString()}</p>
+                        ${l.result?.launch_config?.token?`<div class="flex gap-3 mt-2 text-[11px] mono text-[var(--text2)]">
+                            <span class="font-bold text-[var(--green)]">$${l.result.launch_config.token.symbol}</span>
+                            <span>${Number(l.result.launch_config.token.totalSupply).toLocaleString()} supply</span>
+                            <span>${l.result.launch_config.launch?.bondingCurve||''} curve</span>
+                        </div>`:''}
                     </div>
                     <div class="text-right">
-                        <span class="badge badge-launch">${l.result?.analysis_verdict || 'LAUNCH'}</span>
-                        <p class="text-lg font-bold mono mt-1">${l.result?.analysis_score || '?'}</p>
+                        <span class="badge badge-launch">${l.result?.analysis_verdict||'LAUNCH'}</span>
+                        <p class="text-xl font-bold mono mt-1">${l.result?.analysis_score||'?'}</p>
                     </div>
                 </div>
             </div>
@@ -630,16 +663,15 @@
 
     function updateReportSelect() {
         const sel = document.getElementById('reportSelect');
-        const current = sel.value;
-        sel.innerHTML = '<option value="">Select an analysis to view report...</option>';
-        (state.analyses || []).forEach((a, i) => {
-            const v = a.verdict === 'STRONG_LAUNCH' ? ' [LAUNCH]' : a.verdict === 'PROMISING' ? ' [WATCH]' : '';
-            sel.innerHTML += `<option value="${i}">${a.project_name || '?'} (${a.overall_score || 0}/100)${v}</option>`;
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">Select analysis...</option>';
+        (state.analyses||[]).forEach((a,i) => {
+            const tag = a.verdict==='STRONG_LAUNCH'?' [LAUNCH]':a.verdict==='PROMISING'?' [WATCH]':'';
+            sel.innerHTML += `<option value="${i}">${a.project_name||'?'} (${a.overall_score||0})${tag}</option>`;
         });
-        sel.value = current;
+        sel.value = cur;
     }
 
-    // ─── Radar Chart ────────────────────────────────────────
     function showRadar(scores) {
         document.getElementById('radarCard').style.display = 'block';
         const ctx = document.getElementById('radarChart').getContext('2d');
@@ -651,21 +683,22 @@
                 datasets: [{
                     label: 'Score',
                     data: [scores.market_fit||0, scores.team_signal||0, scores.technical_quality||0, scores.tokenomics_feasibility||0, scores.traction||0],
-                    borderColor: '#6c5ce7',
-                    backgroundColor: 'rgba(108,92,231,0.15)',
+                    borderColor: '#e53935',
+                    backgroundColor: 'rgba(229,57,53,0.1)',
                     borderWidth: 2,
-                    pointBackgroundColor: '#a29bfe',
+                    pointBackgroundColor: '#ff6b6b',
                     pointRadius: 4,
+                    pointBorderColor: '#e53935',
                 }]
             },
             options: {
                 scales: {
                     r: {
                         min: 0, max: 100,
-                        ticks: { stepSize: 20, color: '#8888a4', backdropColor: 'transparent' },
-                        grid: { color: 'rgba(42,42,62,0.6)' },
-                        angleLines: { color: 'rgba(42,42,62,0.6)' },
-                        pointLabels: { color: '#e4e4ef', font: { size: 11 } },
+                        ticks: { stepSize: 20, color: '#55556a', backdropColor: 'transparent', font: { family: 'IBM Plex Mono', size: 10 } },
+                        grid: { color: 'rgba(42,42,54,0.5)' },
+                        angleLines: { color: 'rgba(42,42,54,0.5)' },
+                        pointLabels: { color: '#eaeaf0', font: { family: 'IBM Plex Mono', size: 11 } },
                     }
                 },
                 plugins: { legend: { display: false } },
@@ -673,20 +706,12 @@
         });
     }
 
-    // ─── Helpers ─────────────────────────────────────────────
-    function stripHtml(s) { return (s || '').replace(/<[^>]*>/g, ''); }
+    function stripHtml(s) { return (s||'').replace(/<[^>]*>/g,''); }
     function stripMd(s) {
-        return (s || '')
-            .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold**
-            .replace(/\*([^*]+)\*/g, '$1')        // *italic*
-            .replace(/#{1,6}\s*/g, '')             // ## headings
-            .replace(/`([^`]+)`/g, '$1')           // `code`
-            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [links](url)
-            .replace(/^\s*[-*]\s+/gm, '')          // - list items
-            .replace(/^\s*\d+\.\s+/gm, '')         // 1. ordered lists
-            .replace(/\n{2,}/g, ' ')               // multiple newlines
-            .replace(/\n/g, ' ')                   // single newlines
-            .trim();
+        return (s||'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1')
+            .replace(/#{1,6}\s*/g,'').replace(/`([^`]+)`/g,'$1')
+            .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').replace(/^\s*[-*]\s+/gm,'')
+            .replace(/^\s*\d+\.\s+/gm,'').replace(/\n{2,}/g,' ').replace(/\n/g,' ').trim();
     }
     function esc(s) {
         const d = document.createElement('div');
@@ -694,10 +719,9 @@
         return d.innerHTML;
     }
 
-    // ─── Init ───────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         loadState();
-        addLog('Dashboard initialized, loading state...', 'info');
+        addLog('SurgeScout initialized', 'info');
     });
     </script>
 </body>
