@@ -174,27 +174,37 @@ def scout_moltbook(submolts: list[str] | None = None, keywords: list[str] | None
     client = MoltbookClient()
     all_posts = []
 
-    # 1. Fetch from target submolts
-    target_submolts = submolts or ["lablab", "cryptocurrency", "defi", "agents", "startups"]
+    # 1. Fetch from target submolts (new + hot for variety)
+    target_submolts = submolts or [
+        "lablab", "cryptocurrency", "defi", "agents", "startups",
+        "general", "technology", "crypto", "openclaw-explorers", "dailymolting",
+    ]
     for sub in target_submolts:
-        posts = client.fetch_posts(sub, limit=50, sort="new")
-        all_posts.extend(posts)
-        log.info(f"Fetched {len(posts)} posts from m/{sub}")
+        for sort in ["new", "hot"]:
+            posts = client.fetch_posts(sub, limit=50, sort=sort)
+            all_posts.extend(posts)
+        log.info(f"Fetched posts from m/{sub}")
 
     # 2. Fetch trending
-    trending = client.fetch_trending(limit=30)
+    trending = client.fetch_trending(limit=50)
     all_posts.extend(trending)
     log.info(f"Fetched {len(trending)} trending posts")
 
     # 3. Search by keywords
-    search_keywords = keywords or ["token launch", "new project", "hackathon", "deploy", "agent skill"]
+    search_keywords = keywords or [
+        "token launch", "new project", "hackathon", "deploy", "agent skill",
+        "ICM", "bonding curve", "launchpad", "open source", "smart contract",
+        "SURGE", "OpenClaw", "tokenomics",
+    ]
     for kw in search_keywords:
-        results = client.search_posts(kw, limit=20)
+        results = client.search_posts(kw, limit=25)
         all_posts.extend(results)
+
+    raw_count = len(all_posts)
 
     # 4. Extract projects
     projects = extract_projects_from_posts(all_posts)
-    log.info(f"Extracted {len(projects)} project candidates from {len(all_posts)} posts")
+    log.info(f"Extracted {len(projects)} project candidates from {raw_count} raw posts")
 
     # 5. Sort by quality signals (GitHub URLs, votes, token mentions)
     projects.sort(key=lambda p: (
