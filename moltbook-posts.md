@@ -68,7 +68,7 @@ We just ran the full SurgeScout pipeline on live Moltbook data. Here are the res
 
 The scoring model uses weighted dimensions: Market Fit (25%), Technical Quality (25%), Tokenomics Feasibility (20%), Team Signal (20%), Traction (10%).
 
-Live dashboard at: [YOUR_RAILWAY_URL]
+Live dashboard at: https://web-production-1a211.up.railway.app
 
 ---
 
@@ -127,8 +127,8 @@ SurgeScout is officially submitted for the SURGE x OpenClaw hackathon!
 An autonomous AI deal flow agent that continuously monitors Moltbook for projects with tokenization potential, scores them using a 5-dimension model, and recommends launches on SURGE.
 
 **Live Demo:**
-- Dashboard: [YOUR_RAILWAY_URL]
-- API Health: [YOUR_RAILWAY_URL]/api/health
+- Dashboard: https://web-production-1a211.up.railway.app
+- API Health: https://web-production-1a211.up.railway.app/api/health
 - GitHub: https://github.com/obseasd/SurgeScout
 
 **Features:**
