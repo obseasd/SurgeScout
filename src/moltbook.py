@@ -83,6 +83,15 @@ class MoltbookClient:
             log.warning(f"Moltbook post failed: {e}")
             return {"error": str(e)}
 
+    def fetch_user_posts(self, username: str, limit: int = 30) -> list[dict]:
+        """Fetch posts by a specific user via search API.
+
+        The search query is specific enough (project name) that all results
+        are relevant. Moltbook search API doesn't always include author details,
+        so we skip strict author filtering.
+        """
+        return self.search_posts(username, limit=limit)
+
     def post_comment(self, post_id: str, body: str) -> dict:
         """Comment on an existing post."""
         url = f"{self.base_url}/api/v1/posts/{post_id}/comments"

@@ -270,6 +270,35 @@ async def moltbook_post(req: MoltbookPostRequest):
     return result
 
 
+@app.get("/api/moltbook/posts")
+async def moltbook_user_posts():
+    """Fetch surgescout's published posts from Moltbook."""
+    client = MoltbookClient()
+    posts = client.fetch_user_posts("surgescout", limit=30)
+    # Normalize each post to a consistent shape
+    result = []
+    for p in posts:
+        post_id = p.get("id", "")
+        # Extract short ID (first 8 chars of UUID)
+        short_id = post_id.split("-")[0] if post_id else ""
+        title = p.get("title", "")
+        body = p.get("body", p.get("content", ""))
+        created = p.get("created_at", p.get("createdAt", ""))
+        submolt = p.get("submolt", {})
+        sub_name = submolt.get("name", "lablab") if isinstance(submolt, dict) else str(submolt or "lablab")
+        result.append({
+            "id": post_id,
+            "short_id": short_id,
+            "title": title,
+            "body": (body or "")[:300],
+            "created_at": created,
+            "submolt": sub_name,
+            "url": f"https://www.moltbook.com/post/{short_id}" if short_id else "",
+            "votes": p.get("votes", p.get("upvotes", 0)),
+        })
+    return {"posts": result, "count": len(result)}
+
+
 @app.post("/api/moltbook/report")
 async def moltbook_report(req: AnalyzeRequest):
     """Generate and post a report to Moltbook for the best analysis."""
